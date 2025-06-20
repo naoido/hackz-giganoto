@@ -1,0 +1,76 @@
+version: '3.9'
+
+services:
+  kong:
+    image: kong:latest
+    container_name: kong-gateway
+    env_file:
+      - ./gateway/.env.example
+    environment:
+      - KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES=resty.http,cjson.safe
+      - KONG_PLUGINS=bundled,token-transformer
+    ports:
+      - "9000:8000"
+      - "8001:8001"
+      - "8002:8002"
+    volumes:
+      - ./gateway/kong.yaml:/etc/kong/kong.yaml:ro
+      - ./gateway/plugins:/usr/local/custom_plugins/kong/plugins:ro
+    depends_on:
+      - auth
+      - bff
+    networks:
+      - external_network
+      - internal_network
+
+  auth:
+    build:
+      context: .
+      dockerfile: build/Dockerfile
+      args:
+        SERVICE_NAME: auth
+    image: goa-microservice/auth-service:latest
+    env_file:
+      - .env
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    networks:
+      - internal_network
+      - external_network # あまり良くないけど、GitHubと通信する必要があるため
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  bff:
+    build:
+      context: .
+      dockerfile: build/Dockerfile
+      args:
+        SERVICE_NAME: bff
+    image: goa-microservice/bff-service:latest
+    env_file:
+      - .env
+    restart: unless-stopped
+    ports:
+      - "50054:50054"
+    environment:
+      - CHAT_SERVICE_ADDR=chat:50053
+      - PROFILE_SERVICE_ADDR=profile:50052
+    networks:
+      - internal_network
+
+  redis:
+    image: "redis:latest"
+    networks:
+      - internal_network
+    healthcheck:
+      test: [ 'CMD', 'redis-cli', 'ping' ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  internal_network:
+    internal: true
+  external_network:

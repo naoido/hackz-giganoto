@@ -1,0 +1,44 @@
+_format_version: "3.0"
+
+services:
+  - name: bff-grpc-service
+    protocol: grpc
+    host: bff
+    port: 50054
+  
+  - name: auth-service
+    protocol: http
+    host: auth
+    port: 8000
+
+routes:
+  - name: bff-grpc-route
+    protocols:
+      - grpc
+    paths:
+      - "/bff.v1.Bff/GetProfile"
+      - "/bff.v1.Bff/UpdateProfile"
+      - "/bff.v1.Bff/CreateRoom"
+      - "/bff.v1.Bff/StreamChat"
+      - "/bff.v1.Bff/History"
+    service: bff-grpc-service
+  
+  - name: auth-github-route
+    protocols:
+      - http
+    paths:
+      - /auth/github
+    service: auth-service
+    strip_path: false
+  
+  - name: auth-callback-route
+    protocols:
+      - http
+    paths:
+      - /auth/github/callback
+    service: auth-service
+    strip_path: false
+
+plugins:
+  - name: token-transformer
+    service: bff-grpc-service
