@@ -4,5 +4,6 @@ use (
 	./microservices/auth
 	./microservices/chat
 	./microservices/wiki
+	./microservices/task-manager
 	./pkg/redis
 )

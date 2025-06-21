@@ -1,0 +1,154 @@
+// Code generated with goa v3.21.1, DO NOT EDIT.
+//
+// TaskService protocol buffer definition
+//
+// Command:
+// $ goa gen object-t.com/hackz-giganoto/microservices/task-manager/design
+
+syntax = "proto3";
+
+package task_service;
+
+option go_package = "/task_servicepb";
+
+// タスクを管理するサービス
+service TaskService {
+	// タスクの一覧を取得します。フィルタリングも可能です。
+	rpc List (ListRequest) returns (TaskCollection);
+	// 指定されたIDのタスクを取得します。
+	rpc Get (GetRequest) returns (GetResponse);
+	// 新しいタスクを作成します。
+	rpc Create (CreateRequest) returns (CreateResponse);
+	// 既存のタスクを更新します。
+	rpc Update (UpdateRequest) returns (UpdateResponse);
+	// タスクを削除します。
+	rpc Delete (DeleteRequest) returns (DeleteResponse);
+}
+
+message ListRequest {
+	// ステータスでフィルタリング
+	optional string status = 1;
+	// 担当者IDでフィルタリング
+	optional string assignee_id = 2;
+	// ラベルIDでフィルタリング
+	optional string label_id = 3;
+}
+
+message TaskCollection {
+	repeated Task field = 1;
+}
+
+message Task {
+	// タスクのユニークID
+	string id = 1;
+	// タイトル
+	string title = 2;
+	// 説明
+	optional string description = 3;
+	// ステータス (OPEN, IN_PROGRESS, DONE)
+	string status = 4;
+	// 担当者のユーザーIDリスト
+	repeated string assignee_ids = 5;
+	// ラベルのIDリスト
+	repeated string label_ids = 6;
+	// 作成日時 (RFC3339)
+	string created_at = 7;
+	// 更新日時 (RFC3339)
+	string updated_at = 8;
+}
+
+message GetRequest {
+	// タスクID
+	string id = 1;
+}
+
+message GetResponse {
+	// タスクのユニークID
+	string id = 1;
+	// タイトル
+	string title = 2;
+	// 説明
+	optional string description = 3;
+	// ステータス (OPEN, IN_PROGRESS, DONE)
+	string status = 4;
+	// 担当者のユーザーIDリスト
+	repeated string assignee_ids = 5;
+	// ラベルのIDリスト
+	repeated string label_ids = 6;
+	// 作成日時 (RFC3339)
+	string created_at = 7;
+	// 更新日時 (RFC3339)
+	string updated_at = 8;
+}
+
+message CreateRequest {
+	// タイトル
+	string title = 1;
+	// 説明
+	optional string description = 2;
+	// 担当者のユーザーIDリスト
+	repeated string assignee_ids = 3;
+	// ラベルのIDリスト
+	repeated string label_ids = 4;
+}
+
+message CreateResponse {
+	// タスクのユニークID
+	string id = 1;
+	// タイトル
+	string title = 2;
+	// 説明
+	optional string description = 3;
+	// ステータス (OPEN, IN_PROGRESS, DONE)
+	string status = 4;
+	// 担当者のユーザーIDリスト
+	repeated string assignee_ids = 5;
+	// ラベルのIDリスト
+	repeated string label_ids = 6;
+	// 作成日時 (RFC3339)
+	string created_at = 7;
+	// 更新日時 (RFC3339)
+	string updated_at = 8;
+}
+
+message UpdateRequest {
+	// タスクID
+	string id = 1;
+	// タイトル
+	optional string title = 2;
+	// 説明
+	optional string description = 3;
+	// ステータス
+	optional string status = 4;
+	// 担当者のユーザーIDリスト
+	repeated string assignee_ids = 5;
+	// ラベルのIDリスト
+	repeated string label_ids = 6;
+}
+
+message UpdateResponse {
+	// タスクのユニークID
+	string id = 1;
+	// タイトル
+	string title = 2;
+	// 説明
+	optional string description = 3;
+	// ステータス (OPEN, IN_PROGRESS, DONE)
+	string status = 4;
+	// 担当者のユーザーIDリスト
+	repeated string assignee_ids = 5;
+	// ラベルのIDリスト
+	repeated string label_ids = 6;
+	// 作成日時 (RFC3339)
+	string created_at = 7;
+	// 更新日時 (RFC3339)
+	string updated_at = 8;
+}
+
+message DeleteRequest {
+	// タスクID
+	string id = 1;
+}
+
+message DeleteResponse {
+}

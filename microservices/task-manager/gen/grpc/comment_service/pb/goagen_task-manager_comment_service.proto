@@ -1,0 +1,116 @@
+// Code generated with goa v3.21.1, DO NOT EDIT.
+//
+// CommentService protocol buffer definition
+//
+// Command:
+// $ goa gen object-t.com/hackz-giganoto/microservices/task-manager/design
+
+syntax = "proto3";
+
+package comment_service;
+
+option go_package = "/comment_servicepb";
+
+// コメントを管理するサービス
+service CommentService {
+	// 指定されたタスクのコメント一覧を取得します。
+	rpc List (ListRequest) returns (CommentCollection);
+	// 指定されたIDのコメントを取得します。
+	rpc Get (GetRequest) returns (GetResponse);
+	// 新しいコメントを作成します。
+	rpc Create (CreateRequest) returns (CreateResponse);
+	// 既存のコメントを更新します。
+	rpc Update (UpdateRequest) returns (UpdateResponse);
+	// コメントを削除します。
+	rpc Delete (DeleteRequest) returns (DeleteResponse);
+}
+
+message ListRequest {
+	// タスクID
+	string task_id = 1;
+}
+
+message CommentCollection {
+	repeated Comment field = 1;
+}
+
+message Comment {
+	// コメントのユニークID
+	string id = 1;
+	// 紐づくタスクのID
+	string task_id = 2;
+	// 投稿者のユーザーID
+	string author_id = 3;
+	// コメント本文
+	string body = 4;
+	// 作成日時 (RFC3339)
+	string created_at = 5;
+}
+
+message GetRequest {
+	// コメントID
+	string id = 1;
+}
+
+message GetResponse {
+	// コメントのユニークID
+	string id = 1;
+	// 紐づくタスクのID
+	string task_id = 2;
+	// 投稿者のユーザーID
+	string author_id = 3;
+	// コメント本文
+	string body = 4;
+	// 作成日時 (RFC3339)
+	string created_at = 5;
+}
+
+message CreateRequest {
+	// 紐づくタスクのID
+	string task_id = 1;
+	// 投稿者のユーザーID
+	string author_id = 2;
+	// コメント本文
+	string body = 3;
+}
+
+message CreateResponse {
+	// コメントのユニークID
+	string id = 1;
+	// 紐づくタスクのID
+	string task_id = 2;
+	// 投稿者のユーザーID
+	string author_id = 3;
+	// コメント本文
+	string body = 4;
+	// 作成日時 (RFC3339)
+	string created_at = 5;
+}
+
+message UpdateRequest {
+	// コメントID
+	string id = 1;
+	// コメント本文
+	string body = 2;
+}
+
+message UpdateResponse {
+	// コメントのユニークID
+	string id = 1;
+	// 紐づくタスクのID
+	string task_id = 2;
+	// 投稿者のユーザーID
+	string author_id = 3;
+	// コメント本文
+	string body = 4;
+	// 作成日時 (RFC3339)
+	string created_at = 5;
+}
+
+message DeleteRequest {
+	// コメントID
+	string id = 1;
+}
+
+message DeleteResponse {
+}

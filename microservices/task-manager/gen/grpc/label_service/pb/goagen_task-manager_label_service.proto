@@ -1,0 +1,98 @@
+// Code generated with goa v3.21.1, DO NOT EDIT.
+//
+// LabelService protocol buffer definition
+//
+// Command:
+// $ goa gen object-t.com/hackz-giganoto/microservices/task-manager/design
+
+syntax = "proto3";
+
+package label_service;
+
+option go_package = "/label_servicepb";
+
+// ラベルを管理するサービス
+service LabelService {
+	// ラベルの一覧を取得します。
+	rpc List (ListRequest) returns (LabelCollection);
+	// 指定されたIDのラベルを取得します。
+	rpc Get (GetRequest) returns (GetResponse);
+	// 新しいラベルを作成します。
+	rpc Create (CreateRequest) returns (CreateResponse);
+	// 既存のラベルを更新します。
+	rpc Update (UpdateRequest) returns (UpdateResponse);
+	// ラベルを削除します。
+	rpc Delete (DeleteRequest) returns (DeleteResponse);
+}
+
+message ListRequest {
+}
+
+message LabelCollection {
+	repeated Label field = 1;
+}
+
+message Label {
+	// ラベルのユニークID
+	string id = 1;
+	// ラベル名
+	string name = 2;
+	// 色 (例: #d73a4a)
+	string color = 3;
+}
+
+message GetRequest {
+	// ラベルID
+	string id = 1;
+}
+
+message GetResponse {
+	// ラベルのユニークID
+	string id = 1;
+	// ラベル名
+	string name = 2;
+	// 色 (例: #d73a4a)
+	string color = 3;
+}
+
+message CreateRequest {
+	// ラベル名
+	string name = 1;
+	// 色 (例: #d73a4a)
+	string color = 2;
+}
+
+message CreateResponse {
+	// ラベルのユニークID
+	string id = 1;
+	// ラベル名
+	string name = 2;
+	// 色 (例: #d73a4a)
+	string color = 3;
+}
+
+message UpdateRequest {
+	// ラベルID
+	string id = 1;
+	// ラベル名
+	optional string name = 2;
+	// 色 (例: #d73a4a)
+	optional string color = 3;
+}
+
+message UpdateResponse {
+	// ラベルのユニークID
+	string id = 1;
+	// ラベル名
+	string name = 2;
+	// 色 (例: #d73a4a)
+	string color = 3;
+}
+
+message DeleteRequest {
+	// ラベルID
+	string id = 1;
+}
+
+message DeleteResponse {
+}
