@@ -1,0 +1,89 @@
+// Code generated with goa v3.21.1, DO NOT EDIT.
+//
+// chat protocol buffer definition
+//
+// Command:
+// $ goa gen object-t.com/hackz-giganoto/microservices/chat/design
+
+syntax = "proto3";
+
+package chat.v1;
+
+option go_package = "/chat.v1pb";
+
+// Bidirectional chat service
+service Chat {
+	// Send a message to a chat room
+	rpc SendMessage (SendMessageRequest) returns (SendMessageResponse);
+	// Join a chat room and receive messages
+	rpc JoinChat (JoinChatRequest) returns (stream JoinChatResponse);
+	// Get chat history for a room
+	rpc GetChatHistory (GetChatHistoryRequest) returns (GetChatHistoryResponse);
+}
+
+message SendMessageRequest {
+	// Chat room ID
+	string room_id = 1;
+	// Message content
+	string message_ = 2;
+	// Message type (text, image, file)
+	optional string message_type = 3;
+}
+
+message SendMessageResponse {
+	// Message ID
+	string message_id = 1;
+	// Message timestamp
+	string timestamp = 2;
+}
+
+message JoinChatRequest {
+	// Chat room ID
+	string room_id = 1;
+}
+
+message JoinChatResponse {
+	// Message ID
+	string message_id = 1;
+	// Sender user ID
+	string user_id = 2;
+	// Sender user name
+	string user_name = 3;
+	// Message content
+	string message_ = 4;
+	// Message type
+	optional string message_type = 5;
+	// Message timestamp
+	string timestamp = 6;
+}
+
+message GetChatHistoryRequest {
+	// Chat room ID
+	string room_id = 1;
+	// Number of messages to retrieve
+	optional sint32 limit = 2;
+	// Offset for pagination
+	optional sint32 offset = 3;
+}
+
+message GetChatHistoryResponse {
+	// Chat messages
+	repeated ChatMessage messages = 1;
+	// Total number of messages
+	sint32 total_count = 2;
+}
+// Chat message
+message ChatMessage {
+	// Message ID
+	string message_id = 1;
+	// Sender user ID
+	string user_id = 2;
+	// Sender user name
+	string user_name = 3;
+	// Message content
+	string message_ = 4;
+	// Message type
+	optional string message_type = 5;
+	// Message timestamp
+	string timestamp = 6;
+}
