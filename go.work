@@ -1,6 +1,7 @@
-go 1.24.0
+go 1.24.2
 
 use (
 	./microservices/auth
+	./microservices/chat
 	./pkg/redis
 )
