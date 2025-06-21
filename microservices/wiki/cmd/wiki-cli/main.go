@@ -1,100 +1,100 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
-	"flag"
-	"fmt"
-	"net/url"
-	"os"
-	"strings"
+    "context"
+    "encoding/json"
+    "flag"
+    "fmt"
+    "net/url"
+    "os"
+    "strings"
 
-	goa "goa.design/goa/v3/pkg"
+    goa "goa.design/goa/v3/pkg"
 )
 
 func main() {
-	var (
-		hostF = flag.String("host", "localhost", "Server host (valid values: localhost)")
-		addrF = flag.String("url", "", "URL to service host")
+    var (
+        hostF = flag.String("host", "localhost", "Server host (valid values: localhost)")
+        addrF = flag.String("url", "", "URL to service host")
 
-		verboseF = flag.Bool("verbose", false, "Print request and response details")
-		vF       = flag.Bool("v", false, "Print request and response details")
-		timeoutF = flag.Int("timeout", 30, "Maximum number of seconds to wait for response")
-	)
-	flag.Usage = usage
-	flag.Parse()
+        verboseF = flag.Bool("verbose", false, "Print request and response details")
+        vF       = flag.Bool("v", false, "Print request and response details")
+        timeoutF = flag.Int("timeout", 30, "Maximum number of seconds to wait for response")
+    )
+    flag.Usage = usage
+    flag.Parse()
 
-	var (
-		addr    string
-		timeout int
-		debug   bool
-	)
-	{
-		addr = *addrF
-		if addr == "" {
-			switch *hostF {
-			case "localhost":
-				addr = "http://localhost:80"
-			default:
-				fmt.Fprintf(os.Stderr, "invalid host argument: %q (valid hosts: localhost)\n", *hostF)
-				os.Exit(1)
-			}
-		}
-		timeout = *timeoutF
-		debug = *verboseF || *vF
-	}
+    var (
+        addr    string
+        timeout int
+        debug   bool
+    )
+    {
+        addr = *addrF
+        if addr == "" {
+            switch *hostF {
+            case "localhost":
+                addr = "http://localhost:80"
+            default:
+                fmt.Fprintf(os.Stderr, "invalid host argument: %q (valid hosts: localhost)\n", *hostF)
+                os.Exit(1)
+            }
+        }
+        timeout = *timeoutF
+        debug = *verboseF || *vF
+    }
 
-	var (
-		scheme string
-		host   string
-	)
-	{
-		u, err := url.Parse(addr)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "invalid URL %#v: %s\n", addr, err)
-			os.Exit(1)
-		}
-		scheme = u.Scheme
-		host = u.Host
-	}
+    var (
+        scheme string
+        host   string
+    )
+    {
+        u, err := url.Parse(addr)
+        if err != nil {
+            fmt.Fprintf(os.Stderr, "invalid URL %#v: %s\n", addr, err)
+            os.Exit(1)
+        }
+        scheme = u.Scheme
+        host = u.Host
+    }
 
-	var (
-		endpoint goa.Endpoint
-		payload  any
-		err      error
-	)
-	{
-		switch scheme {
-		case "http", "https":
-			endpoint, payload, err = doHTTP(scheme, host, timeout, debug)
-		default:
-			fmt.Fprintf(os.Stderr, "invalid scheme: %q (valid schemes: grpc|http)\n", scheme)
-			os.Exit(1)
-		}
-	}
-	if err != nil {
-		if err == flag.ErrHelp {
-			os.Exit(0)
-		}
-		fmt.Fprintln(os.Stderr, err.Error())
-		fmt.Fprintln(os.Stderr, "run '"+os.Args[0]+" --help' for detailed usage.")
-		os.Exit(1)
-	}
+    var (
+        endpoint goa.Endpoint
+        payload  any
+        err      error
+    )
+    {
+        switch scheme {
+        case "http", "https":
+            endpoint, payload, err = doHTTP(scheme, host, timeout, debug)
+        default:
+            fmt.Fprintf(os.Stderr, "invalid scheme: %q (valid schemes: grpc|http)\n", scheme)
+            os.Exit(1)
+        }
+    }
+    if err != nil {
+        if err == flag.ErrHelp {
+            os.Exit(0)
+        }
+        fmt.Fprintln(os.Stderr, err.Error())
+        fmt.Fprintln(os.Stderr, "run '"+os.Args[0]+" --help' for detailed usage.")
+        os.Exit(1)
+    }
 
-	data, err := endpoint(context.Background(), payload)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
-	}
+    data, err := endpoint(context.Background(), payload)
+    if err != nil {
+        fmt.Fprintln(os.Stderr, err.Error())
+        os.Exit(1)
+    }
 
-	if data != nil {
-		m, _ := json.MarshalIndent(data, "", "    ")
-		fmt.Println(string(m))
-	}
+    if data != nil {
+        m, _ := json.MarshalIndent(data, "", "    ")
+        fmt.Println(string(m))
+    }
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, `%s is a command line client for the wiki API.
+    fmt.Fprintf(os.Stderr, `%s is a command line client for the wiki API.
 
 Usage:
     %s [-host HOST][-url URL][-timeout SECONDS][-verbose|-v] SERVICE ENDPOINT [flags]
@@ -114,9 +114,31 @@ Example:
 `, os.Args[0], os.Args[0], indent(httpUsageCommands()), os.Args[0], indent(httpUsageExamples()))
 }
 
+// 修正: 未定義の関数を追加
+func httpUsageCommands() string {
+    return `wiki show:   Wiki取得
+wiki create: 新しいWikiを作成
+wiki update: Wikiの内容を更新
+wiki delete: Wikiを削除`
+}
+
+func httpUsageExamples() string {
+    return `wiki-cli wiki show --id="example-id"
+wiki-cli wiki create --channel-id="channel1" --content="# Example Wiki"
+wiki-cli wiki update --id="example-id" --content="# Updated Wiki"
+wiki-cli wiki delete --id="example-id"`
+}
+
 func indent(s string) string {
-	if s == "" {
-		return ""
-	}
-	return "    " + strings.ReplaceAll(s, "\n", "\n    ")
+    if s == "" {
+        return ""
+    }
+    return "    " + strings.ReplaceAll(s, "\n", "\n    ")
+}
+
+// doHTTP関数も必要（簡易版）
+func doHTTP(scheme, host string, timeout int, debug bool) (goa.Endpoint, any, error) {
+    // TODO: 実際のHTTPクライアント実装
+    // 現在は簡易的なエラーを返す
+    return nil, nil, fmt.Errorf("HTTP client not implemented yet")
 }

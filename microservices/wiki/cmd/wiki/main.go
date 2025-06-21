@@ -15,6 +15,7 @@ import (
 	"goa.design/clue/log"
 	wikiapi "object-t.com/hackz-giganoto/microservices/wiki"
 	wiki "object-t.com/hackz-giganoto/microservices/wiki/gen/wiki"
+	redis_client "object-t.com/hackz-giganoto/pkg/redis"
 )
 
 func main() {
@@ -40,12 +41,22 @@ func main() {
 		log.Debugf(ctx, "debug logs enabled")
 	}
 
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
+	}
+
+	redisClient, err := redis_client.NewClient(ctx, redisAddr, "", 0)
+	if err != nil {
+		log.Fatalf(ctx, err, "failed to connect to redis")
+	}
+
 	// Initialize the services.
 	var (
 		wikiSvc wiki.Service
 	)
 	{
-		wikiSvc = wikiapi.NewWiki()
+		wikiSvc = wikiapi.NewWiki(redisClient)
 	}
 
 	// Wrap the services in endpoints that can be invoked from other services
