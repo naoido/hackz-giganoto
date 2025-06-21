@@ -51,8 +51,6 @@ func main() {
 		log.Fatalf(ctx, err, "failed to connect to redis")
 	}
 
-	log.Print(ctx, log.KV{K: "http-port", V: *httpPortF})
-
 	// Initialize the services.
 	var (
 		authSvc auth.Service

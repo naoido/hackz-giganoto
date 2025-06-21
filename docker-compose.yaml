@@ -41,6 +41,24 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+  profile:
+    build:
+      context: .
+      dockerfile: build/Dockerfile
+      args:
+        SERVICE_NAME: profile
+    image: goa-microservice/profile-service:latest
+    env_file:
+      - .env
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    networks:
+      - internal_network
+      - external_network # あまり良くないけど、GitHubと通信する必要があるため
+    depends_on:
+      redis:
+        condition: service_healthy
 
   # bff:
   #   build:

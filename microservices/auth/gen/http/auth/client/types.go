@@ -46,6 +46,8 @@ type OauthCallbackResponseBody struct {
 	ExpiresIn *int64 `form:"expires_in,omitempty" json:"expires_in,omitempty" xml:"expires_in,omitempty"`
 	// GitHub user ID
 	UserID *string `form:"user_id,omitempty" json:"user_id,omitempty" xml:"user_id,omitempty"`
+	// GitHub user name
+	UserName *string `form:"userName,omitempty" json:"userName,omitempty" xml:"userName,omitempty"`
 }
 
 // NewIntrospectRequestBody builds the HTTP request body from the payload of
@@ -110,6 +112,7 @@ func NewOauthCallbackResultOK(body *OauthCallbackResponseBody) *auth.OauthCallba
 		TokenType:   *body.TokenType,
 		ExpiresIn:   *body.ExpiresIn,
 		UserID:      *body.UserID,
+		UserName:    body.UserName,
 	}
 
 	return v

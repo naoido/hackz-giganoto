@@ -2,5 +2,9 @@ go 1.24.4
 
 use (
 	./microservices/auth
+	./microservices/profile
+	./microservices/chat
+	./microservices/wiki
+	./microservices/profile
 	./pkg/redis
 )
