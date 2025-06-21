@@ -11,7 +11,6 @@ import (
 	"sync"
 	"syscall"
 
-	// "github.com/redis/go-redis/v9"
 	"goa.design/clue/debug"
 	"goa.design/clue/log"
 	authapi "object-t.com/hackz-giganoto/microservices/auth"
@@ -50,8 +49,6 @@ func main() {
 	if err != nil {
 		log.Fatalf(ctx, err, "failed to connect to redis")
 	}
-
-	log.Print(ctx, log.KV{K: "http-port", V: *httpPortF})
 
 	// Initialize the services.
 	var (

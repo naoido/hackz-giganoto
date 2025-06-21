@@ -65,6 +65,7 @@ var _ = Service("auth", func() {
 			Field(2, "token_type", String, "Token type (Bearer)")
 			Field(3, "expires_in", Int64, "Token expiration in seconds")
 			Field(4, "user_id", String, "GitHub user ID")
+			Field(5, "userName", String, "GitHub user name")
 			Required("access_token", "token_type", "expires_in", "user_id")
 		})
 

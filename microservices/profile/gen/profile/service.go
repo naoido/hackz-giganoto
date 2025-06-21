@@ -10,22 +10,30 @@ package profile
 import (
 	"context"
 
-	profileviews "object-t.com/hackz-giganoto/microservices/profile/gen/profile/views"
+	"goa.design/goa/v3/security"
 )
 
-// The profile service allows management of user profiles.
+// User profile management service
 type Service interface {
-	// Create implements create.
-	Create(context.Context, *ProfilePayload) (res *GoaExampleProfile, err error)
-	// Get implements get.
-	Get(context.Context, *GetPayload) (res *GoaExampleProfile, err error)
+	// Create a new user profile
+	CreateProfile(context.Context, *CreateProfilePayload) (res *CreateProfileResult, err error)
+	// Get user profile
+	GetProfile(context.Context, *GetProfilePayload) (res *GetProfileResult, err error)
+	// Update user profile
+	UpdateProfile(context.Context, *UpdateProfilePayload) (res *UpdateProfileResult, err error)
+}
+
+// Auther defines the authorization functions to be implemented by the service.
+type Auther interface {
+	// JWTAuth implements the authorization logic for the JWT security scheme.
+	JWTAuth(ctx context.Context, token string, schema *security.JWTScheme) (context.Context, error)
 }
 
 // APIName is the name of the API as defined in the design.
 const APIName = "profile"
 
 // APIVersion is the version of the API as defined in the design.
-const APIVersion = "0.0.1"
+const APIVersion = "1.0"
 
 // ServiceName is the name of the service as defined in the design. This is the
 // same value that is set in the endpoint request contexts under the ServiceKey
@@ -35,60 +43,158 @@ const ServiceName = "profile"
 // MethodNames lists the service method names as defined in the design. These
 // are the same values that are set in the endpoint request contexts under the
 // MethodKey key.
-var MethodNames = [2]string{"create", "get"}
+var MethodNames = [3]string{"create_profile", "get_profile", "update_profile"}
 
-// GetPayload is the payload type of the profile service get method.
-type GetPayload struct {
-	// Profile ID
-	ID string
+// CreateProfilePayload is the payload type of the profile service
+// create_profile method.
+type CreateProfilePayload struct {
+	// JWT token
+	Token *string
+	// User ID
+	UserID string
+	// User name
+	Name string
 }
 
-// GoaExampleProfile is the result type of the profile service create method.
-type GoaExampleProfile struct {
-	// Unique profile ID
-	ID string
-	// The user's name
-	Username string
+// CreateProfileResult is the result type of the profile service create_profile
+// method.
+type CreateProfileResult struct {
+	// User ID
+	UserID string
+	// User name
+	Name string
 }
 
-// ProfilePayload is the payload type of the profile service create method.
-type ProfilePayload struct {
-	// The user's name
-	Username string
+// GetProfilePayload is the payload type of the profile service get_profile
+// method.
+type GetProfilePayload struct {
+	// JWT token
+	Token *string
 }
 
-// NewGoaExampleProfile initializes result type GoaExampleProfile from viewed
-// result type GoaExampleProfile.
-func NewGoaExampleProfile(vres *profileviews.GoaExampleProfile) *GoaExampleProfile {
-	return newGoaExampleProfile(vres.Projected)
+// GetProfileResult is the result type of the profile service get_profile
+// method.
+type GetProfileResult struct {
+	// User ID
+	UserID string
+	// User name
+	Name string
 }
 
-// NewViewedGoaExampleProfile initializes viewed result type GoaExampleProfile
-// from result type GoaExampleProfile using the given view.
-func NewViewedGoaExampleProfile(res *GoaExampleProfile, view string) *profileviews.GoaExampleProfile {
-	p := newGoaExampleProfileView(res)
-	return &profileviews.GoaExampleProfile{Projected: p, View: "default"}
+// UpdateProfilePayload is the payload type of the profile service
+// update_profile method.
+type UpdateProfilePayload struct {
+	// JWT token
+	Token *string
+	// User name
+	Name string
 }
 
-// newGoaExampleProfile converts projected type GoaExampleProfile to service
-// type GoaExampleProfile.
-func newGoaExampleProfile(vres *profileviews.GoaExampleProfileView) *GoaExampleProfile {
-	res := &GoaExampleProfile{}
-	if vres.ID != nil {
-		res.ID = *vres.ID
-	}
-	if vres.Username != nil {
-		res.Username = *vres.Username
-	}
-	return res
+// UpdateProfileResult is the result type of the profile service update_profile
+// method.
+type UpdateProfileResult struct {
+	// User ID
+	UserID string
+	// User name
+	Name string
 }
 
-// newGoaExampleProfileView projects result type GoaExampleProfile to projected
-// type GoaExampleProfileView using the "default" view.
-func newGoaExampleProfileView(res *GoaExampleProfile) *profileviews.GoaExampleProfileView {
-	vres := &profileviews.GoaExampleProfileView{
-		ID:       &res.ID,
-		Username: &res.Username,
-	}
-	return vres
+// Invalid request
+type BadRequest string
+
+// Internal server error
+type InternalError string
+
+// Invalid or expired token
+type InvalidToken string
+
+// Profile not found
+type NotFound string
+
+// Unauthorized access
+type Unauthorized string
+
+// Error returns an error description.
+func (e BadRequest) Error() string {
+	return "Invalid request"
+}
+
+// ErrorName returns "bad_request".
+//
+// Deprecated: Use GoaErrorName - https://github.com/goadesign/goa/issues/3105
+func (e BadRequest) ErrorName() string {
+	return e.GoaErrorName()
+}
+
+// GoaErrorName returns "bad_request".
+func (e BadRequest) GoaErrorName() string {
+	return "bad_request"
+}
+
+// Error returns an error description.
+func (e InternalError) Error() string {
+	return "Internal server error"
+}
+
+// ErrorName returns "internal_error".
+//
+// Deprecated: Use GoaErrorName - https://github.com/goadesign/goa/issues/3105
+func (e InternalError) ErrorName() string {
+	return e.GoaErrorName()
+}
+
+// GoaErrorName returns "internal_error".
+func (e InternalError) GoaErrorName() string {
+	return "internal_error"
+}
+
+// Error returns an error description.
+func (e InvalidToken) Error() string {
+	return "Invalid or expired token"
+}
+
+// ErrorName returns "invalid_token".
+//
+// Deprecated: Use GoaErrorName - https://github.com/goadesign/goa/issues/3105
+func (e InvalidToken) ErrorName() string {
+	return e.GoaErrorName()
+}
+
+// GoaErrorName returns "invalid_token".
+func (e InvalidToken) GoaErrorName() string {
+	return "invalid_token"
+}
+
+// Error returns an error description.
+func (e NotFound) Error() string {
+	return "Profile not found"
+}
+
+// ErrorName returns "not_found".
+//
+// Deprecated: Use GoaErrorName - https://github.com/goadesign/goa/issues/3105
+func (e NotFound) ErrorName() string {
+	return e.GoaErrorName()
+}
+
+// GoaErrorName returns "not_found".
+func (e NotFound) GoaErrorName() string {
+	return "not_found"
+}
+
+// Error returns an error description.
+func (e Unauthorized) Error() string {
+	return "Unauthorized access"
+}
+
+// ErrorName returns "unauthorized".
+//
+// Deprecated: Use GoaErrorName - https://github.com/goadesign/goa/issues/3105
+func (e Unauthorized) ErrorName() string {
+	return e.GoaErrorName()
+}
+
+// GoaErrorName returns "unauthorized".
+func (e Unauthorized) GoaErrorName() string {
+	return "unauthorized"
 }

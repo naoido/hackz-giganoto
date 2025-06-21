@@ -115,14 +115,14 @@ definitions:
             auth_url:
                 type: string
                 description: GitHub OAuth authorization URL
-                example: Impedit rem eligendi consectetur voluptas rem error.
+                example: Dolores et.
             state:
                 type: string
                 description: OAuth state parameter for CSRF protection
-                example: Sunt deserunt repudiandae quod consectetur quia.
+                example: Illum ducimus et voluptatem.
         example:
-            auth_url: Dolores et.
-            state: Illum ducimus et voluptatem.
+            auth_url: Iure iure nam.
+            state: Distinctio ipsum ut nobis aperiam sit.
         required:
             - auth_url
             - state
@@ -133,9 +133,9 @@ definitions:
             token:
                 type: string
                 description: Opaque token to introspect
-                example: Voluptatibus illum natus.
+                example: Impedit rem eligendi consectetur voluptas rem error.
         example:
-            token: Perferendis autem et et qui maiores non.
+            token: Sunt deserunt repudiandae quod consectetur quia.
         required:
             - token
     AuthIntrospectResponseBody:
@@ -145,9 +145,9 @@ definitions:
             jwt:
                 type: string
                 description: Internal JWT token for downstream services
-                example: Necessitatibus ipsam illum ut repellendus velit.
+                example: Voluptatibus illum natus.
         example:
-            jwt: Soluta vero.
+            jwt: Perferendis autem et et qui maiores non.
         required:
             - jwt
     AuthOauthCallbackResponseBody:
@@ -157,25 +157,30 @@ definitions:
             access_token:
                 type: string
                 description: Opaque access token
-                example: Iure iure nam.
+                example: Voluptatem accusamus.
             expires_in:
                 type: integer
                 description: Token expiration in seconds
-                example: 3251217016065129387
+                example: 7236623053205628506
                 format: int64
             token_type:
                 type: string
                 description: Token type (Bearer)
-                example: Distinctio ipsum ut nobis aperiam sit.
+                example: Eos recusandae quod porro.
             user_id:
                 type: string
                 description: GitHub user ID
-                example: Accusamus et eos recusandae.
+                example: Laudantium voluptatem assumenda.
+            userName:
+                type: string
+                description: GitHub user name
+                example: Rem tempora autem vel blanditiis.
         example:
-            access_token: Porro sed qui.
-            expires_in: 4815394587362155415
-            token_type: Voluptatem assumenda ratione.
-            user_id: Autem vel blanditiis ratione corrupti nostrum autem.
+            access_token: Corrupti nostrum.
+            expires_in: 6967004365280331159
+            token_type: Debitis illo iusto maxime voluptas aliquid totam.
+            user_id: Provident ab ea alias minus.
+            userName: Aut doloribus consequatur aut.
         required:
             - access_token
             - token_type

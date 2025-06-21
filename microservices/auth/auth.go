@@ -9,14 +9,15 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"time"
 	"crypto/rand"
+	"strconv"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"goa.design/clue/log"
+	model "object-t.com/hackz-giganoto/microservices/model"
 	auth "object-t.com/hackz-giganoto/microservices/auth/gen/auth"
 )
 
@@ -28,7 +29,7 @@ type authsrvc struct {
 
 // NewAuth returns the auth service implementation.
 func NewAuth(redis *redis.Client) auth.Service {
-	return &authsrvc{redis: redis}
+	return &authsrvc{redis}
 }
 
 // Introspect opaque token and return internal JWT token for Kong Gateway
@@ -69,6 +70,7 @@ func (s *authsrvc) AuthURL(ctx context.Context) (res *auth.AuthURLResult, err er
 		return nil, err
 	}
 	state := hex.EncodeToString(b)
+	log.Printf(ctx, "generated state: %s", state)
 
 	// Store the state in Redis with an expiration
 	err = s.redis.Set(ctx, "state:"+state, "true", 10*time.Minute).Err()
@@ -96,6 +98,7 @@ func (s *authsrvc) OauthCallback(ctx context.Context, p *auth.OauthCallbackPaylo
 
 	// 1. Validate state
 	stateKey := "state:" + p.State
+	log.Printf(ctx, "validating state: %s", stateKey)
 	val, err := s.redis.Get(ctx, stateKey).Result()
 	if err == redis.Nil {
 		log.Printf(ctx, "invalid or expired state: %s", p.State)
@@ -190,6 +193,7 @@ func (s *authsrvc) OauthCallback(ctx context.Context, p *auth.OauthCallbackPaylo
 		ID    int64  `json:"id"`
 		Login string `json:"login"`
 	}
+	log.Printf(ctx, "github user info response: %s", resp.Body)
 	if err := json.NewDecoder(resp.Body).Decode(&userRes); err != nil {
 		log.Errorf(ctx, err, "failed to decode user info response from github")
 		return nil, auth.InternalError("failed to decode user info response")
@@ -205,11 +209,45 @@ func (s *authsrvc) OauthCallback(ctx context.Context, p *auth.OauthCallbackPaylo
 		return nil, auth.InternalError("failed to store opaque token in redis")
 	}
 
+	var authModel model.Auth
+	
+	UserID := strconv.FormatInt(userRes.ID, 10)
+	Name := userRes.Login
+
+	val, err = s.redis.Get(ctx, Name).Result()
+	if err == redis.Nil {
+		s.redis.Set(ctx, Name, true, 10*time.Minute)
+		claims := jwt.MapClaims{
+			"sub":   UserID,
+			"scope": []string{"api:register"},
+			"iat":   time.Now().Unix(),
+			"exp":   time.Now().Add(time.Minute).Unix(),
+		}
+		t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+		token, err := t.SignedString([]byte("secret"))
+		if err != nil {
+			log.Errorf(ctx, err, "failed to sign token for user %s", UserID)
+			return nil, auth.InternalError("failed to sign token for user")
+		}
+
+		res.AccessToken = token
+		res.TokenType = "Bearer"
+		res.ExpiresIn = int64(expiration.Seconds())
+		res.UserID = UserID
+		res.UserName = &Name
+
+		return res, nil
+	}
+
+	authModel.UserID = UserID
+	authModel.Name = Name
+
 	// 5. Return result
 	res.AccessToken = opaqueToken
 	res.TokenType = "Bearer"
 	res.ExpiresIn = int64(expiration.Seconds())
-	res.UserID = strconv.FormatInt(userRes.ID, 10)
+	res.UserID = UserID
+	res.UserName = &Name
 
 	log.Printf(ctx, "successfully issued opaque token for user %s", res.UserID)
 

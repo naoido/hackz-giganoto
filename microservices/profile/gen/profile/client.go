@@ -15,34 +15,62 @@ import (
 
 // Client is the "profile" service client.
 type Client struct {
-	CreateEndpoint goa.Endpoint
-	GetEndpoint    goa.Endpoint
+	CreateProfileEndpoint goa.Endpoint
+	GetProfileEndpoint    goa.Endpoint
+	UpdateProfileEndpoint goa.Endpoint
 }
 
 // NewClient initializes a "profile" service client given the endpoints.
-func NewClient(create, get goa.Endpoint) *Client {
+func NewClient(createProfile, getProfile, updateProfile goa.Endpoint) *Client {
 	return &Client{
-		CreateEndpoint: create,
-		GetEndpoint:    get,
+		CreateProfileEndpoint: createProfile,
+		GetProfileEndpoint:    getProfile,
+		UpdateProfileEndpoint: updateProfile,
 	}
 }
 
-// Create calls the "create" endpoint of the "profile" service.
-func (c *Client) Create(ctx context.Context, p *ProfilePayload) (res *GoaExampleProfile, err error) {
+// CreateProfile calls the "create_profile" endpoint of the "profile" service.
+// CreateProfile may return the following errors:
+//   - "unauthorized" (type Unauthorized)
+//   - "internal_error" (type InternalError)
+//   - error: internal error
+func (c *Client) CreateProfile(ctx context.Context, p *CreateProfilePayload) (res *CreateProfileResult, err error) {
 	var ires any
-	ires, err = c.CreateEndpoint(ctx, p)
+	ires, err = c.CreateProfileEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*GoaExampleProfile), nil
+	return ires.(*CreateProfileResult), nil
 }
 
-// Get calls the "get" endpoint of the "profile" service.
-func (c *Client) Get(ctx context.Context, p *GetPayload) (res *GoaExampleProfile, err error) {
+// GetProfile calls the "get_profile" endpoint of the "profile" service.
+// GetProfile may return the following errors:
+//   - "unauthorized" (type Unauthorized)
+//   - "not_found" (type NotFound)
+//   - "internal_error" (type InternalError)
+//   - "invalid_token" (type InvalidToken)
+//   - error: internal error
+func (c *Client) GetProfile(ctx context.Context, p *GetProfilePayload) (res *GetProfileResult, err error) {
 	var ires any
-	ires, err = c.GetEndpoint(ctx, p)
+	ires, err = c.GetProfileEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*GoaExampleProfile), nil
+	return ires.(*GetProfileResult), nil
+}
+
+// UpdateProfile calls the "update_profile" endpoint of the "profile" service.
+// UpdateProfile may return the following errors:
+//   - "unauthorized" (type Unauthorized)
+//   - "bad_request" (type BadRequest)
+//   - "internal_error" (type InternalError)
+//   - "invalid_token" (type InvalidToken)
+//   - error: internal error
+func (c *Client) UpdateProfile(ctx context.Context, p *UpdateProfilePayload) (res *UpdateProfileResult, err error) {
+	var ires any
+	ires, err = c.UpdateProfileEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*UpdateProfileResult), nil
 }

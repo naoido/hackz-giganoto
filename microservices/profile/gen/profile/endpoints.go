@@ -11,52 +11,99 @@ import (
 	"context"
 
 	goa "goa.design/goa/v3/pkg"
+	"goa.design/goa/v3/security"
 )
 
 // Endpoints wraps the "profile" service endpoints.
 type Endpoints struct {
-	Create goa.Endpoint
-	Get    goa.Endpoint
+	CreateProfile goa.Endpoint
+	GetProfile    goa.Endpoint
+	UpdateProfile goa.Endpoint
 }
 
 // NewEndpoints wraps the methods of the "profile" service with endpoints.
 func NewEndpoints(s Service) *Endpoints {
+	// Casting service to Auther interface
+	a := s.(Auther)
 	return &Endpoints{
-		Create: NewCreateEndpoint(s),
-		Get:    NewGetEndpoint(s),
+		CreateProfile: NewCreateProfileEndpoint(s, a.JWTAuth),
+		GetProfile:    NewGetProfileEndpoint(s, a.JWTAuth),
+		UpdateProfile: NewUpdateProfileEndpoint(s, a.JWTAuth),
 	}
 }
 
 // Use applies the given middleware to all the "profile" service endpoints.
 func (e *Endpoints) Use(m func(goa.Endpoint) goa.Endpoint) {
-	e.Create = m(e.Create)
-	e.Get = m(e.Get)
+	e.CreateProfile = m(e.CreateProfile)
+	e.GetProfile = m(e.GetProfile)
+	e.UpdateProfile = m(e.UpdateProfile)
 }
 
-// NewCreateEndpoint returns an endpoint function that calls the method
-// "create" of service "profile".
-func NewCreateEndpoint(s Service) goa.Endpoint {
+// NewCreateProfileEndpoint returns an endpoint function that calls the method
+// "create_profile" of service "profile".
+func NewCreateProfileEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoint {
 	return func(ctx context.Context, req any) (any, error) {
-		p := req.(*ProfilePayload)
-		res, err := s.Create(ctx, p)
+		p := req.(*CreateProfilePayload)
+		var err error
+		sc := security.JWTScheme{
+			Name:           "jwt",
+			Scopes:         []string{"api:read", "api:write", "api:register"},
+			RequiredScopes: []string{"api:read"},
+		}
+		var token string
+		if p.Token != nil {
+			token = *p.Token
+		}
+		ctx, err = authJWTFn(ctx, token, &sc)
 		if err != nil {
 			return nil, err
 		}
-		vres := NewViewedGoaExampleProfile(res, "default")
-		return vres, nil
+		return s.CreateProfile(ctx, p)
 	}
 }
 
-// NewGetEndpoint returns an endpoint function that calls the method "get" of
-// service "profile".
-func NewGetEndpoint(s Service) goa.Endpoint {
+// NewGetProfileEndpoint returns an endpoint function that calls the method
+// "get_profile" of service "profile".
+func NewGetProfileEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoint {
 	return func(ctx context.Context, req any) (any, error) {
-		p := req.(*GetPayload)
-		res, err := s.Get(ctx, p)
+		p := req.(*GetProfilePayload)
+		var err error
+		sc := security.JWTScheme{
+			Name:           "jwt",
+			Scopes:         []string{"api:read", "api:write", "api:register"},
+			RequiredScopes: []string{"api:read"},
+		}
+		var token string
+		if p.Token != nil {
+			token = *p.Token
+		}
+		ctx, err = authJWTFn(ctx, token, &sc)
 		if err != nil {
 			return nil, err
 		}
-		vres := NewViewedGoaExampleProfile(res, "default")
-		return vres, nil
+		return s.GetProfile(ctx, p)
+	}
+}
+
+// NewUpdateProfileEndpoint returns an endpoint function that calls the method
+// "update_profile" of service "profile".
+func NewUpdateProfileEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoint {
+	return func(ctx context.Context, req any) (any, error) {
+		p := req.(*UpdateProfilePayload)
+		var err error
+		sc := security.JWTScheme{
+			Name:           "jwt",
+			Scopes:         []string{"api:read", "api:write", "api:register"},
+			RequiredScopes: []string{"api:write"},
+		}
+		var token string
+		if p.Token != nil {
+			token = *p.Token
+		}
+		ctx, err = authJWTFn(ctx, token, &sc)
+		if err != nil {
+			return nil, err
+		}
+		return s.UpdateProfile(ctx, p)
 	}
 }
