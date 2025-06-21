@@ -16,7 +16,7 @@ var _ = API("profile", func() {
 	
 	Server("profile", func() {
 		Host("localhost", func() {
-			URI("grpc://localhost:50052")
+			URI("grpc://localhost:50050")
 		})
 	})
 })

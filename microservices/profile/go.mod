@@ -2,7 +2,14 @@ module object-t.com/hackz-giganoto/microservices/profile
 
 go 1.24.4
 
-require goa.design/goa/v3 v3.21.1
+require (
+	goa.design/goa/v3 v3.21.1
+	goa.design/clue v0.15.0
+	object-t.com/hackz-giganoto/pkg/security v0.0.0-00010101000000-000000000000
+)
+
+replace object-t.com/hackz-giganoto/pkg/security => ../../pkg/security
+replace object-t.com/hackz-giganoto/microservices/model => ../model
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

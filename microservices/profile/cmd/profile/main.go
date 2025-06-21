@@ -13,9 +13,9 @@ import (
 
 	"goa.design/clue/debug"
 	"goa.design/clue/log"
-	"object-t.com/hackz-giganoto/db"
 	profileapi "object-t.com/hackz-giganoto/microservices/profile"
 	profile "object-t.com/hackz-giganoto/microservices/profile/gen/profile"
+	redis_client "object-t.com/hackz-giganoto/pkg/redis"
 )
 
 func main() {
@@ -41,19 +41,21 @@ func main() {
 		log.Debugf(ctx, "debug logs enabled")
 	}
 
-	// Initialize the database
-	db, err := db.InitDB()
-	if err != nil {
-		log.Fatalf(ctx, err, "failed to initialize database")
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
 	}
-	log.Infof(ctx, "database connection established")
+	redisClient, err := redis_client.NewClient(ctx, redisAddr, "", 0)
+	if err != nil {
+		log.Fatalf(ctx, err, "failed to connect to redis")
+	}
 
 	// Initialize the services.
 	var (
 		profileSvc profile.Service
 	)
 	{
-		profileSvc = profileapi.NewProfile(db)
+		profileSvc = profileapi.NewProfile(redisClient)
 	}
 
 	// Wrap the services in endpoints that can be invoked from other services
