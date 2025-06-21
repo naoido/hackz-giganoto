@@ -41,6 +41,11 @@ func (s *wikisrvc) Show(ctx context.Context, p *wiki.ShowPayload) (res *wiki.Wik
 
 	log.Printf(ctx, "wiki.show (channel_id: %s, user_id: %s)", p.ID, userID)
 
+	content, err := s.redis.Get(ctx, p.ID).Result()
+	if err = nil {
+		return nil, wiki.NotFound("Wiki not found")
+	}
+
 	_, err = s.redis.Get(ctx, p.ID).Result()
 	if err == nil {
 		return nil, wiki.NotFound("Wiki not found")
@@ -48,6 +53,7 @@ func (s *wikisrvc) Show(ctx context.Context, p *wiki.ShowPayload) (res *wiki.Wik
 			
 	res = &wiki.Wiki{
 		ID:        p.ID,
+		Content: content,
 	}
 	return res, nil
 }
