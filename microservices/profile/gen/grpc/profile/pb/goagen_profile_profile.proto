@@ -1,0 +1,58 @@
+// Code generated with goa v3.21.1, DO NOT EDIT.
+//
+// profile protocol buffer definition
+//
+// Command:
+// $ goa gen object-t.com/hackz-giganoto/microservices/profile/design
+
+syntax = "proto3";
+
+package profile.v1;
+
+option go_package = "/profile.v1pb";
+
+// User profile management service
+service Profile {
+	// Create a new user profile
+	rpc CreateProfile (CreateProfileRequest) returns (CreateProfileResponse);
+	// Get user profile
+	rpc GetProfile (GetProfileRequest) returns (GetProfileResponse);
+	// Update user profile
+	rpc UpdateProfile (UpdateProfileRequest) returns (UpdateProfileResponse);
+}
+
+message CreateProfileRequest {
+	// User ID
+	string user_id = 1;
+	// User name
+	string name = 2;
+}
+
+message CreateProfileResponse {
+	// User ID
+	string user_id = 1;
+	// User name
+	string name = 2;
+}
+
+message GetProfileRequest {
+}
+
+message GetProfileResponse {
+	// User ID
+	string user_id = 1;
+	// User name
+	string name = 2;
+}
+
+message UpdateProfileRequest {
+	// User name
+	string name = 1;
+}
+
+message UpdateProfileResponse {
+	// User ID
+	string user_id = 1;
+	// User name
+	string name = 2;
+}

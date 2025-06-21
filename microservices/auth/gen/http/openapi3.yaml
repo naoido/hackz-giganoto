@@ -21,16 +21,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/AuthURLResponseBody'
                             example:
-                                auth_url: Autem tenetur et voluptate possimus asperiores ea.
-                                state: Itaque excepturi repellendus rerum tempore velit.
+                                auth_url: Itaque excepturi repellendus rerum tempore velit.
+                                state: Consectetur et saepe voluptas ex sit.
                 "500":
                     description: 'internal_error: Internal Server Error response.'
                     content:
                         application/json:
                             schema:
                                 type: string
-                                example: Modi est adipisci autem rem fuga.
-                            example: Quisquam pariatur perspiciatis.
+                                example: Tempore quo modi ab et qui.
+                            example: Similique delectus maiores quidem hic veritatis distinctio.
     /auth/github/callback:
         get:
             tags:
@@ -47,8 +47,8 @@ paths:
                   schema:
                     type: string
                     description: Authorization code from GitHub
-                    example: Aut rerum illum tempora et molestiae.
-                  example: Sit dolorum et error.
+                    example: Exercitationem aut.
+                  example: Qui inventore amet deserunt ex laboriosam.
                 - name: state
                   in: query
                   description: OAuth state parameter for validation
@@ -57,8 +57,8 @@ paths:
                   schema:
                     type: string
                     description: OAuth state parameter for validation
-                    example: Quos iusto provident.
-                  example: Similique delectus maiores quidem hic veritatis distinctio.
+                    example: Et rerum et.
+                  example: Saepe quia.
             responses:
                 "200":
                     description: OK response.
@@ -67,34 +67,35 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/OauthCallbackResponseBody'
                             example:
-                                access_token: Atque omnis magnam.
-                                expires_in: 2103469508143158517
-                                token_type: Error sed.
-                                user_id: Ad inventore at omnis.
+                                access_token: Error sed.
+                                expires_in: 3564172555033265585
+                                token_type: Inventore ad inventore at omnis non commodi.
+                                user_id: Dolore est.
+                                userName: Consequatur sit sit doloremque.
                 "400":
                     description: 'invalid_code: Bad Request response.'
                     content:
                         application/json:
                             schema:
                                 type: string
-                                example: Dolorem veniam atque consectetur atque officiis.
-                            example: Qui inventore amet deserunt ex laboriosam.
+                                example: Voluptates deleniti fugit qui.
+                            example: Provident quia maiores voluptatem aut et ipsum.
                 "500":
                     description: 'internal_error: Internal Server Error response.'
                     content:
                         application/json:
                             schema:
                                 type: string
-                                example: Quibusdam dolores optio consequatur excepturi non occaecati.
-                            example: Saepe quia.
+                                example: Aut rerum illum tempora et molestiae.
+                            example: Necessitatibus quia accusantium excepturi sit.
                 "502":
                     description: 'github_error: Bad Gateway response.'
                     content:
                         application/json:
                             schema:
                                 type: string
-                                example: Nisi odio velit ducimus facilis molestiae.
-                            example: Et rerum et.
+                                example: Quisquam pariatur perspiciatis.
+                            example: Quia amet.
     /introspect:
         post:
             tags:
@@ -109,7 +110,7 @@ paths:
                         schema:
                             $ref: '#/components/schemas/IntrospectRequestBody'
                         example:
-                            token: Perspiciatis ut soluta officiis voluptas.
+                            token: Et suscipit.
             responses:
                 "200":
                     description: OK response.
@@ -118,23 +119,23 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/IntrospectResponseBody'
                             example:
-                                jwt: Et suscipit.
+                                jwt: Molestiae occaecati aspernatur.
                 "401":
                     description: 'invalid_token: Unauthorized response.'
                     content:
                         application/json:
                             schema:
                                 type: string
-                                example: Minus cupiditate adipisci omnis ex porro.
-                            example: Voluptates deleniti fugit qui.
+                                example: Ut iusto cum voluptate.
+                            example: Sit dolorum et error.
                 "500":
                     description: 'internal_error: Internal Server Error response.'
                     content:
                         application/json:
                             schema:
                                 type: string
-                                example: Illo voluptatem eligendi.
-                            example: Reiciendis veniam.
+                                example: Qui sit reprehenderit a ut et ea.
+                            example: Quos iusto provident.
 components:
     schemas:
         AuthURLResponseBody:
@@ -143,14 +144,14 @@ components:
                 auth_url:
                     type: string
                     description: GitHub OAuth authorization URL
-                    example: Quas autem eius suscipit laboriosam laborum voluptas.
+                    example: Repudiandae fugiat molestiae aliquid voluptas.
                 state:
                     type: string
                     description: OAuth state parameter for CSRF protection
-                    example: Ut iusto cum voluptate.
+                    example: Modi est adipisci autem rem fuga.
             example:
-                auth_url: Qui sit reprehenderit a ut et ea.
-                state: Repudiandae fugiat molestiae aliquid voluptas.
+                auth_url: Architecto aspernatur vel.
+                state: Officia nihil sed quas sequi nemo occaecati.
             required:
                 - auth_url
                 - state
@@ -160,9 +161,9 @@ components:
                 token:
                     type: string
                     description: Opaque token to introspect
-                    example: Illo iusto maxime voluptas aliquid totam temporibus.
+                    example: Est dolor libero.
             example:
-                token: Provident ab ea alias minus.
+                token: Minus cupiditate adipisci omnis ex porro.
             required:
                 - token
         IntrospectResponseBody:
@@ -171,9 +172,9 @@ components:
                 jwt:
                     type: string
                     description: Internal JWT token for downstream services
-                    example: Aut doloribus consequatur aut.
+                    example: Illo voluptatem eligendi.
             example:
-                jwt: Est dolor libero.
+                jwt: Quas autem eius suscipit laboriosam laborum voluptas.
             required:
                 - jwt
         OauthCallbackResponseBody:
@@ -182,25 +183,30 @@ components:
                 access_token:
                     type: string
                     description: Opaque access token
-                    example: Architecto aspernatur vel.
+                    example: Dolor consequatur et quo similique culpa sint.
                 expires_in:
                     type: integer
                     description: Token expiration in seconds
-                    example: 9066871487314540977
+                    example: 7412543894473354896
                     format: int64
                 token_type:
                     type: string
                     description: Token type (Bearer)
-                    example: Officia nihil sed quas sequi nemo occaecati.
+                    example: Qui sint id labore.
                 user_id:
                     type: string
                     description: GitHub user ID
-                    example: Quo modi ab et qui nobis dolor.
+                    example: Rerum dolorem veniam atque consectetur.
+                userName:
+                    type: string
+                    description: GitHub user name
+                    example: Officiis autem.
             example:
-                access_token: Et quo similique.
-                expires_in: 9067872402607182631
-                token_type: Sint quidem.
-                user_id: Id labore et adipisci.
+                access_token: Reprehenderit quae.
+                expires_in: 3544532098040696233
+                token_type: Voluptatum nisi odio.
+                user_id: Facilis molestiae sequi quibusdam dolores.
+                userName: Consequatur excepturi non occaecati.
             required:
                 - access_token
                 - token_type

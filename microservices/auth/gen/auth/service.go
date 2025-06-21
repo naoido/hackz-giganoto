@@ -78,6 +78,8 @@ type OauthCallbackResult struct {
 	ExpiresIn int64
 	// GitHub user ID
 	UserID string
+	// GitHub user name
+	UserName *string
 }
 
 // GitHub API error
