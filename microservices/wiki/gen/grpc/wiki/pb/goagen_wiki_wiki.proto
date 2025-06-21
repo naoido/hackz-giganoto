@@ -1,0 +1,90 @@
+// Code generated with goa v3.21.1, DO NOT EDIT.
+//
+// wiki protocol buffer definition
+//
+// Command:
+// $ goa gen object-t.com/hackz-giganoto/microservices/wiki/design
+
+syntax = "proto3";
+
+package wiki.v1;
+
+option go_package = "/wiki.v1pb";
+
+// Wikiサービス
+service Wiki {
+	// Wiki取得
+	rpc Show (ShowRequest) returns (ShowResponse);
+	// 新しいWikiを作成
+	rpc Create (CreateRequest) returns (CreateResponse);
+	// 指定されたIDのWikiの内容を更新
+	rpc Update (UpdateRequest) returns (UpdateResponse);
+	// 指定されたIDのWikiを削除
+	rpc Delete (DeleteRequest) returns (DeleteResponse);
+}
+
+message ShowRequest {
+	// WikiのユニークID
+	string id = 1;
+}
+
+message ShowResponse {
+	// Wiki毎のユニークな値
+	string id = 1;
+	// 作成されたチャンネルのID
+	string channel_id = 2;
+	// Markdown形式のコンテンツ
+	string content = 3;
+	// 作成日時 (RFC3339 format)
+	string created_at = 4;
+	// 更新日時 (RFC3339 format)
+	string updated_at = 5;
+}
+
+message CreateRequest {
+	// Wikiを作成するチャンネルのID
+	string channel_id = 1;
+	// Markdown形式のコンテンツ
+	string content = 2;
+}
+
+message CreateResponse {
+	// Wiki毎のユニークな値
+	string id = 1;
+	// 作成されたチャンネルのID
+	string channel_id = 2;
+	// Markdown形式のコンテンツ
+	string content = 3;
+	// 作成日時 (RFC3339 format)
+	string created_at = 4;
+	// 更新日時 (RFC3339 format)
+	string updated_at = 5;
+}
+
+message UpdateRequest {
+	// 更新するWikiのユニークID
+	string id = 1;
+	// 更新後のMarkdownコンテンツ
+	string content = 2;
+}
+
+message UpdateResponse {
+	// Wiki毎のユニークな値
+	string id = 1;
+	// 作成されたチャンネルのID
+	string channel_id = 2;
+	// Markdown形式のコンテンツ
+	string content = 3;
+	// 作成日時 (RFC3339 format)
+	string created_at = 4;
+	// 更新日時 (RFC3339 format)
+	string updated_at = 5;
+}
+
+message DeleteRequest {
+	// 削除するWikiのユニークID
+	string id = 1;
+}
+
+message DeleteResponse {
+}
