@@ -19,10 +19,7 @@ var _ = Service("auth", func() {
 
 		Result(func() {
 			Field(1, "jwt", String, "Internal JWT token for downstream services")
-			Field(2, "active", Boolean, "Whether the token is active")
-			Field(3, "exp", Int64, "Token expiration timestamp")
-			Field(4, "scopes", ArrayOf(String), "Token scopes")
-			Required("jwt", "active")
+			Required("jwt")
 		})
 
 		Error("invalid_token", String, "Token is invalid or expired")
@@ -71,6 +68,7 @@ var _ = Service("auth", func() {
 			Required("access_token", "token_type", "expires_in", "user_id")
 		})
 
+		Error("github_error", String, "GitHub API error")
 		Error("invalid_state", String, "Invalid or expired state parameter")
 		Error("invalid_code", String, "Invalid authorization code")
 		Error("github_error", String, "GitHub API error")

@@ -24,12 +24,6 @@ type IntrospectRequestBody struct {
 type IntrospectResponseBody struct {
 	// Internal JWT token for downstream services
 	JWT string `form:"jwt" json:"jwt" xml:"jwt"`
-	// Whether the token is active
-	Active bool `form:"active" json:"active" xml:"active"`
-	// Token expiration timestamp
-	Exp *int64 `form:"exp,omitempty" json:"exp,omitempty" xml:"exp,omitempty"`
-	// Token scopes
-	Scopes []string `form:"scopes,omitempty" json:"scopes,omitempty" xml:"scopes,omitempty"`
 }
 
 // AuthURLResponseBody is the type of the "auth" service "auth_url" endpoint
@@ -58,15 +52,7 @@ type OauthCallbackResponseBody struct {
 // the "introspect" endpoint of the "auth" service.
 func NewIntrospectResponseBody(res *auth.IntrospectResult) *IntrospectResponseBody {
 	body := &IntrospectResponseBody{
-		JWT:    res.JWT,
-		Active: res.Active,
-		Exp:    res.Exp,
-	}
-	if res.Scopes != nil {
-		body.Scopes = make([]string, len(res.Scopes))
-		for i, val := range res.Scopes {
-			body.Scopes[i] = val
-		}
+		JWT: res.JWT,
 	}
 	return body
 }
