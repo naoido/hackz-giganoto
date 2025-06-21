@@ -5,7 +5,7 @@ services:
     protocol: grpc
     host: bff
     port: 50054
-  
+
   - name: auth-service
     protocol: http
     host: auth
@@ -22,7 +22,25 @@ routes:
       - "/bff.v1.Bff/StreamChat"
       - "/bff.v1.Bff/History"
     service: bff-grpc-service
-  
+    plugins:
+      - name: opentelemetry
+        config:
+          traces_endpoint: http://otel-collector:4318/v1/traces
+          resource_attributes:
+            service.name: kong-gateway
+            service.version: 1.0.0
+          sampling_rate: 1.0
+          connect_timeout: 10000
+          read_timeout: 10000
+          send_timeout: 10000
+          propagation:
+            default_format: w3c
+            extract:
+              - w3c
+              - jaeger
+            inject:
+              - w3c
+
   - name: auth-github-route
     protocols:
       - http
@@ -30,7 +48,25 @@ routes:
       - /auth/github
     service: auth-service
     strip_path: false
-  
+    plugins:
+      - name: opentelemetry
+        config:
+          traces_endpoint: http://otel-collector:4318/v1/traces
+          resource_attributes:
+            service.name: kong-gateway
+            service.version: 1.0.0
+          sampling_rate: 1.0
+          connect_timeout: 10000
+          read_timeout: 10000
+          send_timeout: 10000
+          propagation:
+            default_format: w3c
+            extract:
+              - w3c
+              - jaeger
+            inject:
+              - w3c
+
   - name: auth-callback-route
     protocols:
       - http
@@ -38,6 +74,24 @@ routes:
       - /auth/github/callback
     service: auth-service
     strip_path: false
+    plugins:
+      - name: opentelemetry
+        config:
+          traces_endpoint: http://otel-collector:4318/v1/traces
+          resource_attributes:
+            service.name: kong-gateway
+            service.version: 1.0.0
+          sampling_rate: 1.0
+          connect_timeout: 10000
+          read_timeout: 10000
+          send_timeout: 10000
+          propagation:
+            default_format: w3c
+            extract:
+              - w3c
+              - jaeger
+            inject:
+              - w3c
 
 plugins:
   - name: token-transformer

@@ -70,6 +70,77 @@ services:
       timeout: 5s
       retries: 3
 
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "4315:4317"
+      - "4316:4318"
+      - "8888:8888"
+      - "8889:8889"
+      - "13133:13133"
+      - "1777:1777"
+    depends_on:
+      - jaeger
+    networks:
+      - internal_network
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14250:14250"  # gRPC
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=memory
+    networks:
+      - internal_network
+      - external_network
+
+  # Loki for log aggregation
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"  # Loki API
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./telemetry/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki-sg:/loki
+    networks:
+      - internal_network
+      - external_network
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"  # Grafana UI
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+    volumes:
+      - grafana-sg:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - jaeger
+      - loki
+    networks:
+      - internal_network
+      - external_network
+
+volumes:
+  grafana-sg:
+  loki-sg:
+
 networks:
   internal_network:
     internal: true
