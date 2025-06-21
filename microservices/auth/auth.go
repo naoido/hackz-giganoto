@@ -29,7 +29,7 @@ type authsrvc struct {
 
 // NewAuth returns the auth service implementation.
 func NewAuth(redis *redis.Client) auth.Service {
-	return &authsrvc{redis}
+	return &authsrvc{redis: redis}
 }
 
 // Introspect opaque token and return internal JWT token for Kong Gateway
@@ -99,6 +99,7 @@ func (s *authsrvc) OauthCallback(ctx context.Context, p *auth.OauthCallbackPaylo
 	// 1. Validate state
 	stateKey := "state:" + p.State
 	log.Printf(ctx, "validating state: %s", stateKey)
+ 
 	val, err := s.redis.Get(ctx, stateKey).Result()
 	if err == redis.Nil {
 		log.Printf(ctx, "invalid or expired state: %s", p.State)

@@ -11,6 +11,7 @@ import (
 	"sync"
 	"syscall"
 
+	// "github.com/redis/go-redis/v9"
 	"goa.design/clue/debug"
 	"goa.design/clue/log"
 	authapi "object-t.com/hackz-giganoto/microservices/auth"
