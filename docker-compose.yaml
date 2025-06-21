@@ -1,4 +1,4 @@
-version: '3.9'
+# version: '3.9'
 
 services:
   kong:
@@ -18,7 +18,7 @@ services:
       - ./gateway/plugins:/usr/local/custom_plugins/kong/plugins:ro
     depends_on:
       - auth
-      - bff
+      # - bff
     networks:
       - external_network
       - internal_network
@@ -42,23 +42,23 @@ services:
       redis:
         condition: service_healthy
 
-  bff:
-    build:
-      context: .
-      dockerfile: build/Dockerfile
-      args:
-        SERVICE_NAME: bff
-    image: goa-microservice/bff-service:latest
-    env_file:
-      - .env
-    restart: unless-stopped
-    ports:
-      - "50054:50054"
-    environment:
-      - CHAT_SERVICE_ADDR=chat:50053
-      - PROFILE_SERVICE_ADDR=profile:50052
-    networks:
-      - internal_network
+  # bff:
+  #   build:
+  #     context: .
+  #     dockerfile: build/Dockerfile
+  #     args:
+  #       SERVICE_NAME: bff
+  #   image: goa-microservice/bff-service:latest
+  #   env_file:
+  #     - .env
+  #   restart: unless-stopped
+  #   ports:
+  #     - "50054:50054"
+  #   environment:
+  #     - CHAT_SERVICE_ADDR=chat:50053
+  #     - PROFILE_SERVICE_ADDR=profile:50052
+  #   networks:
+  #     - internal_network
 
   redis:
     image: "redis:latest"

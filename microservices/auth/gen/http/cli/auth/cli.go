@@ -29,7 +29,7 @@ func UsageCommands() string {
 // UsageExamples produces an example of a valid invocation of the CLI tool.
 func UsageExamples() string {
 	return os.Args[0] + ` auth introspect --body '{
-      "token": "Recusandae non cum perspiciatis error."
+      "token": "Perspiciatis ut soluta officiis voluptas."
    }'` + "\n" +
 		""
 }
@@ -169,7 +169,7 @@ Introspect opaque token and return internal JWT token for Kong Gateway
 
 Example:
     %[1]s auth introspect --body '{
-      "token": "Recusandae non cum perspiciatis error."
+      "token": "Perspiciatis ut soluta officiis voluptas."
    }'
 `, os.Args[0])
 }
@@ -192,6 +192,6 @@ Handle GitHub OAuth callback and return opaque token
     -state STRING: 
 
 Example:
-    %[1]s auth oauth-callback --code "Laborum quam." --state "Quia sapiente est sed accusamus temporibus."
+    %[1]s auth oauth-callback --code "Perspiciatis quibusdam dolor numquam." --state "Odit vel esse voluptas."
 `, os.Args[0])
 }

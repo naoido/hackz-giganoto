@@ -11,10 +11,12 @@ import (
 	"sync"
 	"syscall"
 
+	// "github.com/redis/go-redis/v9"
 	"goa.design/clue/debug"
 	"goa.design/clue/log"
 	authapi "object-t.com/hackz-giganoto/microservices/auth"
 	auth "object-t.com/hackz-giganoto/microservices/auth/gen/auth"
+	redis_client "object-t.com/hackz-giganoto/pkg/redis"
 )
 
 func main() {
@@ -39,6 +41,16 @@ func main() {
 		ctx = log.Context(ctx, log.WithDebug())
 		log.Debugf(ctx, "debug logs enabled")
 	}
+
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
+	}
+	redisClient, err := redis_client.NewClient(ctx, redisAddr, "", 0)
+	if err != nil {
+		log.Fatalf(ctx, err, "failed to connect to redis")
+	}
+
 	log.Print(ctx, log.KV{K: "http-port", V: *httpPortF})
 
 	// Initialize the services.
@@ -46,7 +58,7 @@ func main() {
 		authSvc auth.Service
 	)
 	{
-		authSvc = authapi.NewAuth()
+		authSvc = authapi.NewAuth(redisClient)
 	}
 
 	// Wrap the services in endpoints that can be invoked from other services
@@ -79,7 +91,7 @@ func main() {
 	switch *hostF {
 	case "localhost":
 		{
-			addr := "http://localhost:80"
+			addr := "http://localhost:8000"
 			u, err := url.Parse(addr)
 			if err != nil {
 				log.Fatalf(ctx, err, "invalid URL %#v\n", addr)
@@ -97,7 +109,7 @@ func main() {
 				}
 				u.Host = net.JoinHostPort(h, *httpPortF)
 			} else if u.Port() == "" {
-				u.Host = net.JoinHostPort(u.Host, "80")
+				u.Host = net.JoinHostPort(u.Host, "8000")
 			}
 			handleHTTPServer(ctx, u, authEndpoints, &wg, errc, *dbgF)
 		}

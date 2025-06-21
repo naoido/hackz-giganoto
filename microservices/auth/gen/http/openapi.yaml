@@ -97,7 +97,6 @@ paths:
                         $ref: '#/definitions/AuthIntrospectResponseBody'
                         required:
                             - jwt
-                            - active
                 "401":
                     description: Unauthorized response.
                     schema:
@@ -116,14 +115,14 @@ definitions:
             auth_url:
                 type: string
                 description: GitHub OAuth authorization URL
-                example: Ut iusto cum voluptate.
+                example: Impedit rem eligendi consectetur voluptas rem error.
             state:
                 type: string
                 description: OAuth state parameter for CSRF protection
-                example: Qui sit reprehenderit a ut et ea.
+                example: Sunt deserunt repudiandae quod consectetur quia.
         example:
-            auth_url: Repudiandae fugiat molestiae aliquid voluptas.
-            state: Modi est adipisci autem rem fuga.
+            auth_url: Dolores et.
+            state: Illum ducimus et voluptatem.
         required:
             - auth_url
             - state
@@ -134,49 +133,23 @@ definitions:
             token:
                 type: string
                 description: Opaque token to introspect
-                example: Illo voluptatem eligendi.
+                example: Voluptatibus illum natus.
         example:
-            token: Quas autem eius suscipit laboriosam laborum voluptas.
+            token: Perferendis autem et et qui maiores non.
         required:
             - token
     AuthIntrospectResponseBody:
         title: AuthIntrospectResponseBody
         type: object
         properties:
-            active:
-                type: boolean
-                description: Whether the token is active
-                example: false
-            exp:
-                type: integer
-                description: Token expiration timestamp
-                example: 3379430536361615656
-                format: int64
             jwt:
                 type: string
                 description: Internal JWT token for downstream services
-                example: Ipsum voluptatem.
-            scopes:
-                type: array
-                items:
-                    type: string
-                    example: Recusandae quod porro.
-                description: Token scopes
-                example:
-                    - Laudantium voluptatem assumenda.
-                    - Rem tempora autem vel blanditiis.
-                    - Corrupti nostrum.
-                    - Debitis illo iusto maxime voluptas aliquid totam.
+                example: Necessitatibus ipsam illum ut repellendus velit.
         example:
-            active: true
-            exp: 8289282376285563972
-            jwt: Et provident ab ea alias minus.
-            scopes:
-                - Aut eos est dolor libero.
-                - Minus cupiditate adipisci omnis ex porro.
+            jwt: Soluta vero.
         required:
             - jwt
-            - active
     AuthOauthCallbackResponseBody:
         title: AuthOauthCallbackResponseBody
         type: object
@@ -184,25 +157,25 @@ definitions:
             access_token:
                 type: string
                 description: Opaque access token
-                example: Architecto aspernatur vel.
+                example: Iure iure nam.
             expires_in:
                 type: integer
                 description: Token expiration in seconds
-                example: 9066871487314540977
+                example: 3251217016065129387
                 format: int64
             token_type:
                 type: string
                 description: Token type (Bearer)
-                example: Officia nihil sed quas sequi nemo occaecati.
+                example: Distinctio ipsum ut nobis aperiam sit.
             user_id:
                 type: string
                 description: GitHub user ID
-                example: Quo modi ab et qui nobis dolor.
+                example: Accusamus et eos recusandae.
         example:
-            access_token: Et quo similique.
-            expires_in: 9067872402607182631
-            token_type: Sint quidem.
-            user_id: Id labore et adipisci.
+            access_token: Porro sed qui.
+            expires_in: 4815394587362155415
+            token_type: Voluptatem assumenda ratione.
+            user_id: Autem vel blanditiis ratione corrupti nostrum autem.
         required:
             - access_token
             - token_type
