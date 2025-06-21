@@ -56,12 +56,6 @@ type IntrospectPayload struct {
 type IntrospectResult struct {
 	// Internal JWT token for downstream services
 	JWT string
-	// Whether the token is active
-	Active bool
-	// Token expiration timestamp
-	Exp *int64
-	// Token scopes
-	Scopes []string
 }
 
 // OauthCallbackPayload is the payload type of the auth service oauth_callback
