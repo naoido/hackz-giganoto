@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-redis-deployment
+  namespace: hackz-giganoto
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-redis
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: auth-redis
+        version: v1
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        command:
+        - redis-server
+        - --appendonly
+        - "yes"
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        volumeMounts:
+        - name: auth-redis-data
+          mountPath: /data
+      volumes:
+      - name: auth-redis-data
+        persistentVolumeClaim:
+          claimName: auth-redis-data

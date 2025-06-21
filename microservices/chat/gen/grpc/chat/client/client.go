@@ -24,9 +24,9 @@ type Client struct {
 	opts    []grpc.CallOption
 }
 
-// JoinChatClientStream implements the chat.JoinChatClientStream interface.
-type JoinChatClientStream struct {
-	stream chatpb.Chat_JoinChatClient
+// StreamRoomClientStream implements the chat.StreamRoomClientStream interface.
+type StreamRoomClientStream struct {
+	stream chatpb.Chat_StreamRoomClient
 }
 
 // NewClient instantiates gRPC client for all the chat service servers.
@@ -37,13 +37,13 @@ func NewClient(cc *grpc.ClientConn, opts ...grpc.CallOption) *Client {
 	}
 }
 
-// SendMessage calls the "SendMessage" function in chatpb.ChatClient interface.
-func (c *Client) SendMessage() goa.Endpoint {
+// CreateRoom calls the "CreateRoom" function in chatpb.ChatClient interface.
+func (c *Client) CreateRoom() goa.Endpoint {
 	return func(ctx context.Context, v any) (any, error) {
 		inv := goagrpc.NewInvoker(
-			BuildSendMessageFunc(c.grpccli, c.opts...),
-			EncodeSendMessageRequest,
-			DecodeSendMessageResponse)
+			BuildCreateRoomFunc(c.grpccli, c.opts...),
+			EncodeCreateRoomRequest,
+			DecodeCreateRoomResponse)
 		res, err := inv.Invoke(ctx, v)
 		if err != nil {
 			resp := goagrpc.DecodeError(err)
@@ -58,13 +58,13 @@ func (c *Client) SendMessage() goa.Endpoint {
 	}
 }
 
-// JoinChat calls the "JoinChat" function in chatpb.ChatClient interface.
-func (c *Client) JoinChat() goa.Endpoint {
+// History calls the "History" function in chatpb.ChatClient interface.
+func (c *Client) History() goa.Endpoint {
 	return func(ctx context.Context, v any) (any, error) {
 		inv := goagrpc.NewInvoker(
-			BuildJoinChatFunc(c.grpccli, c.opts...),
-			EncodeJoinChatRequest,
-			DecodeJoinChatResponse)
+			BuildHistoryFunc(c.grpccli, c.opts...),
+			EncodeHistoryRequest,
+			DecodeHistoryResponse)
 		res, err := inv.Invoke(ctx, v)
 		if err != nil {
 			resp := goagrpc.DecodeError(err)
@@ -79,14 +79,13 @@ func (c *Client) JoinChat() goa.Endpoint {
 	}
 }
 
-// GetChatHistory calls the "GetChatHistory" function in chatpb.ChatClient
-// interface.
-func (c *Client) GetChatHistory() goa.Endpoint {
+// RoomList calls the "RoomList" function in chatpb.ChatClient interface.
+func (c *Client) RoomList() goa.Endpoint {
 	return func(ctx context.Context, v any) (any, error) {
 		inv := goagrpc.NewInvoker(
-			BuildGetChatHistoryFunc(c.grpccli, c.opts...),
-			EncodeGetChatHistoryRequest,
-			DecodeGetChatHistoryResponse)
+			BuildRoomListFunc(c.grpccli, c.opts...),
+			EncodeRoomListRequest,
+			DecodeRoomListResponse)
 		res, err := inv.Invoke(ctx, v)
 		if err != nil {
 			resp := goagrpc.DecodeError(err)
@@ -101,19 +100,100 @@ func (c *Client) GetChatHistory() goa.Endpoint {
 	}
 }
 
-// Recv reads instances of "chatpb.JoinChatResponse" from the "join_chat"
+// JoinRoom calls the "JoinRoom" function in chatpb.ChatClient interface.
+func (c *Client) JoinRoom() goa.Endpoint {
+	return func(ctx context.Context, v any) (any, error) {
+		inv := goagrpc.NewInvoker(
+			BuildJoinRoomFunc(c.grpccli, c.opts...),
+			EncodeJoinRoomRequest,
+			DecodeJoinRoomResponse)
+		res, err := inv.Invoke(ctx, v)
+		if err != nil {
+			resp := goagrpc.DecodeError(err)
+			switch message := resp.(type) {
+			case *goapb.ErrorResponse:
+				return nil, goagrpc.NewServiceError(message)
+			default:
+				return nil, goa.Fault("%s", err.Error())
+			}
+		}
+		return res, nil
+	}
+}
+
+// InviteRoom calls the "InviteRoom" function in chatpb.ChatClient interface.
+func (c *Client) InviteRoom() goa.Endpoint {
+	return func(ctx context.Context, v any) (any, error) {
+		inv := goagrpc.NewInvoker(
+			BuildInviteRoomFunc(c.grpccli, c.opts...),
+			EncodeInviteRoomRequest,
+			DecodeInviteRoomResponse)
+		res, err := inv.Invoke(ctx, v)
+		if err != nil {
+			resp := goagrpc.DecodeError(err)
+			switch message := resp.(type) {
+			case *goapb.ErrorResponse:
+				return nil, goagrpc.NewServiceError(message)
+			default:
+				return nil, goa.Fault("%s", err.Error())
+			}
+		}
+		return res, nil
+	}
+}
+
+// StreamRoom calls the "StreamRoom" function in chatpb.ChatClient interface.
+func (c *Client) StreamRoom() goa.Endpoint {
+	return func(ctx context.Context, v any) (any, error) {
+		inv := goagrpc.NewInvoker(
+			BuildStreamRoomFunc(c.grpccli, c.opts...),
+			EncodeStreamRoomRequest,
+			DecodeStreamRoomResponse)
+		res, err := inv.Invoke(ctx, v)
+		if err != nil {
+			resp := goagrpc.DecodeError(err)
+			switch message := resp.(type) {
+			case *goapb.ErrorResponse:
+				return nil, goagrpc.NewServiceError(message)
+			default:
+				return nil, goa.Fault("%s", err.Error())
+			}
+		}
+		return res, nil
+	}
+}
+
+// Recv reads instances of "chatpb.StreamRoomResponse" from the "stream-room"
 // endpoint gRPC stream.
-func (s *JoinChatClientStream) Recv() (*chat.JoinChatResult, error) {
-	var res *chat.JoinChatResult
+func (s *StreamRoomClientStream) Recv() (*chat.Chat, error) {
+	var res *chat.Chat
 	v, err := s.stream.Recv()
 	if err != nil {
 		return res, err
 	}
-	return NewJoinChatResponseJoinChatResult(v), nil
+	return NewStreamRoomResponseChat2(v), nil
 }
 
-// RecvWithContext reads instances of "chatpb.JoinChatResponse" from the
-// "join_chat" endpoint gRPC stream with context.
-func (s *JoinChatClientStream) RecvWithContext(ctx context.Context) (*chat.JoinChatResult, error) {
+// RecvWithContext reads instances of "chatpb.StreamRoomResponse" from the
+// "stream-room" endpoint gRPC stream with context.
+func (s *StreamRoomClientStream) RecvWithContext(ctx context.Context) (*chat.Chat, error) {
 	return s.Recv()
+}
+
+// Send streams instances of "chatpb.StreamRoomStreamingRequest" to the
+// "stream-room" endpoint gRPC stream.
+func (s *StreamRoomClientStream) Send(res string) error {
+	v := NewProtoStreamRoomStreamingRequest(res)
+	return s.stream.Send(v)
+}
+
+// SendWithContext streams instances of "chatpb.StreamRoomStreamingRequest" to
+// the "stream-room" endpoint gRPC stream with context.
+func (s *StreamRoomClientStream) SendWithContext(ctx context.Context, res string) error {
+	return s.Send(res)
+}
+
+func (s *StreamRoomClientStream) Close() error {
+	// Close the send direction of the stream
+	return s.stream.CloseSend()
 }

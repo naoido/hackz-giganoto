@@ -3,12 +3,14 @@
 services:
   kong:
     image: kong:latest
-    container_name: kong-gateway
     env_file:
       - ./gateway/.env.example
     environment:
       - KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES=resty.http,cjson.safe
-      - KONG_PLUGINS=bundled,token-transformer
+      - KONG_PLUGINS=bundled,token-transformer,opentelemetry
+      - KONG_TRACING_INSTRUMENTATIONS=all
+      - KONG_TRACING_SAMPLING_RATE=1.0
+      - KONG_LOG_LEVEL=debug
     ports:
       - "9000:8000"
       - "8001:8001"
@@ -35,48 +37,69 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=auth-service
+      - OTEL_SERVICE_VERSION=1.0.0
     networks:
       - internal_network
       - external_network # あまり良くないけど、GitHubと通信する必要があるため
     depends_on:
       redis:
         condition: service_healthy
-  profile:
+      otel-collector:
+        condition: service_started
+
+  chat:
     build:
       context: .
       dockerfile: build/Dockerfile
       args:
-        SERVICE_NAME: profile
+        SERVICE_NAME: chat
     image: goa-microservice/profile-service:latest
     env_file:
       - .env
     restart: unless-stopped
     ports:
-      - "8001:8001"
+      - "50053:50053"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=chat-service
+      - OTEL_SERVICE_VERSION=1.0.0
     networks:
       - internal_network
-      - external_network # あまり良くないけど、GitHubと通信する必要があるため
+      - external_network
     depends_on:
       redis:
         condition: service_healthy
+      otel-collector:
+        condition: service_started
 
-  # bff:
-  #   build:
-  #     context: .
-  #     dockerfile: build/Dockerfile
-  #     args:
-  #       SERVICE_NAME: bff
-  #   image: goa-microservice/bff-service:latest
-  #   env_file:
-  #     - .env
-  #   restart: unless-stopped
-  #   ports:
-  #     - "50054:50054"
-  #   environment:
-  #     - CHAT_SERVICE_ADDR=chat:50053
-  #     - PROFILE_SERVICE_ADDR=profile:50052
-  #   networks:
-  #     - internal_network
+  bff:
+    build:
+      context: .
+      dockerfile: build/Dockerfile
+      args:
+        SERVICE_NAME: bff
+    image: goa-microservice/bff-service:latest
+    env_file:
+      - .env
+    restart: unless-stopped
+    ports:
+      - "50000:50000"
+    environment:
+      - CHAT_SERVICE_ADDR=chat:50053
+      - PROFILE_SERVICE_ADDR=profile:50052
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=profile-service
+      - OTEL_SERVICE_VERSION=1.0.0
+    networks:
+      - internal_network
+    depends_on:
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
 
   redis:
     image: "redis:latest"
@@ -90,10 +113,9 @@ services:
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
-    container_name: otel-collector
-    command: ["--config=/etc/otel-collector-config.yaml"]
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
     volumes:
-      - ./otel-config.yaml:/etc/otel-collector-config.yaml:ro
+      - ./telemetry/otel-config.yaml:/etc/otel-collector-config.yaml:ro
     ports:
       - "4315:4317"
       - "4316:4318"
@@ -108,7 +130,6 @@ services:
 
   jaeger:
     image: jaegertracing/all-in-one:latest
-    container_name: jaeger
     ports:
       - "16686:16686"  # Jaeger UI
       - "14250:14250"  # gRPC
@@ -124,7 +145,6 @@ services:
   # Loki for log aggregation
   loki:
     image: grafana/loki:latest
-    container_name: loki
     ports:
       - "3100:3100"  # Loki API
     command: -config.file=/etc/loki/local-config.yaml
@@ -138,7 +158,6 @@ services:
   # Grafana
   grafana:
     image: grafana/grafana:latest
-    container_name: grafana
     ports:
       - "3000:3000"  # Grafana UI
     environment:

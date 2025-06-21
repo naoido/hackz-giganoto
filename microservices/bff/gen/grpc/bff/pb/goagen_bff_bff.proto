@@ -1,0 +1,139 @@
+// Code generated with goa v3.21.1, DO NOT EDIT.
+//
+// bff protocol buffer definition
+//
+// Command:
+// $ goa gen object-t.com/hackz-giganoto/microservices/bff/design
+
+syntax = "proto3";
+
+package bff.v1;
+
+option go_package = "/bff.v1pb";
+
+// Backend for Frontend service for chat application
+service Bff {
+	// Create a new chat room
+	rpc CreateRoom (CreateRoomRequest) returns (CreateRoomResponse);
+	// Get chat room history with enriched user names
+	rpc History (HistoryRequest) returns (HistoryResponse);
+	// Get all chat rooms history
+	rpc RoomList (RoomListRequest) returns (RoomListResponse);
+	// Creates a new chat room
+	rpc JoinRoom (JoinRoomRequest) returns (JoinRoomResponse);
+	// Creates a new chat room
+	rpc InviteRoom (InviteRoomRequest) returns (InviteRoomResponse);
+	// Stream chat messages with bidirectional communication
+	rpc StreamChat (stream StreamChatStreamingRequest) returns (stream StreamChatResponse);
+	// Get current user profile
+	rpc GetProfile (GetProfileRequest) returns (GetProfileResponse);
+	// Update current user profile
+	rpc UpdateProfile (UpdateProfileRequest) returns (UpdateProfileResponse);
+}
+
+message CreateRoomRequest {
+}
+
+message CreateRoomResponse {
+	string field = 1;
+}
+
+message HistoryRequest {
+	// Room ID
+	string room_id = 1;
+}
+
+message HistoryResponse {
+	repeated EnrichedMessage field = 1;
+}
+// Chat message enriched with user profile information
+message EnrichedMessage {
+	// Message ID
+	optional string message_id = 1;
+	// Room ID
+	string room_id = 2;
+	// Sender user ID
+	string user_id = 3;
+	// Message content
+	string message_ = 4;
+	// Sent timestamp
+	optional sint64 created_at = 5;
+	// Created timestamp
+	optional sint64 updated_at = 6;
+}
+
+message RoomListRequest {
+}
+
+message RoomListResponse {
+	repeated string field = 1;
+}
+
+message JoinRoomRequest {
+	// Invite key
+	string invite_key = 1;
+}
+
+message JoinRoomResponse {
+	string field = 1;
+}
+
+message InviteRoomRequest {
+	// The id of the room
+	string room_id = 1;
+	// The id of the user
+	string user_id = 2;
+}
+
+message InviteRoomResponse {
+	string field = 1;
+}
+
+message StreamChatStreamingRequest {
+	string field = 1;
+}
+
+message StreamChatResponse {
+	// Message ID
+	optional string message_id = 1;
+	// Room ID
+	string room_id = 2;
+	// Sender user ID
+	string user_id = 3;
+	// Message content
+	string message_ = 4;
+	// Sent timestamp
+	optional sint64 created_at = 5;
+	// Created timestamp
+	optional sint64 updated_at = 6;
+}
+
+message GetProfileRequest {
+}
+
+message GetProfileResponse {
+	// User ID
+	string user_id = 1;
+	// User name
+	string name = 2;
+	// Creation timestamp
+	optional string created_at = 3;
+	// Last update timestamp
+	optional string updated_at = 4;
+}
+
+message UpdateProfileRequest {
+	// User name
+	string name = 1;
+}
+
+message UpdateProfileResponse {
+	// User ID
+	string user_id = 1;
+	// User name
+	string name = 2;
+	// Creation timestamp
+	optional string created_at = 3;
+	// Last update timestamp
+	optional string updated_at = 4;
+}

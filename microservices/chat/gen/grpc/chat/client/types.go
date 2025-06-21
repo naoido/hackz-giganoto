@@ -8,97 +8,112 @@
 package client
 
 import (
-	goa "goa.design/goa/v3/pkg"
 	chat "object-t.com/hackz-giganoto/microservices/chat/gen/chat"
 	chatpb "object-t.com/hackz-giganoto/microservices/chat/gen/grpc/chat/pb"
 )
 
-// NewProtoSendMessageRequest builds the gRPC request type from the payload of
-// the "send_message" endpoint of the "chat" service.
-func NewProtoSendMessageRequest(payload *chat.SendMessagePayload) *chatpb.SendMessageRequest {
-	message := &chatpb.SendMessageRequest{
-		RoomId:      payload.RoomID,
-		Message_:    payload.Message,
-		MessageType: payload.MessageType,
-	}
+// NewProtoCreateRoomRequest builds the gRPC request type from the payload of
+// the "create-room" endpoint of the "chat" service.
+func NewProtoCreateRoomRequest() *chatpb.CreateRoomRequest {
+	message := &chatpb.CreateRoomRequest{}
 	return message
 }
 
-// NewSendMessageResult builds the result type of the "send_message" endpoint
-// of the "chat" service from the gRPC response type.
-func NewSendMessageResult(message *chatpb.SendMessageResponse) *chat.SendMessageResult {
-	result := &chat.SendMessageResult{
-		MessageID: message.MessageId,
-		Timestamp: message.Timestamp,
-	}
+// NewCreateRoomResult builds the result type of the "create-room" endpoint of
+// the "chat" service from the gRPC response type.
+func NewCreateRoomResult(message *chatpb.CreateRoomResponse) string {
+	result := message.Field
 	return result
 }
 
-// NewProtoJoinChatRequest builds the gRPC request type from the payload of the
-// "join_chat" endpoint of the "chat" service.
-func NewProtoJoinChatRequest(payload *chat.JoinChatPayload) *chatpb.JoinChatRequest {
-	message := &chatpb.JoinChatRequest{
+// NewProtoHistoryRequest builds the gRPC request type from the payload of the
+// "history" endpoint of the "chat" service.
+func NewProtoHistoryRequest(payload *chat.HistoryPayload) *chatpb.HistoryRequest {
+	message := &chatpb.HistoryRequest{
 		RoomId: payload.RoomID,
 	}
 	return message
 }
 
-func NewJoinChatResponseJoinChatResult(v *chatpb.JoinChatResponse) *chat.JoinChatResult {
-	result := &chat.JoinChatResult{
-		MessageID:   v.MessageId,
-		UserID:      v.UserId,
-		UserName:    v.UserName,
-		Message:     v.Message_,
-		MessageType: v.MessageType,
-		Timestamp:   v.Timestamp,
-	}
-	return result
-}
-
-// NewProtoGetChatHistoryRequest builds the gRPC request type from the payload
-// of the "get_chat_history" endpoint of the "chat" service.
-func NewProtoGetChatHistoryRequest(payload *chat.GetChatHistoryPayload) *chatpb.GetChatHistoryRequest {
-	message := &chatpb.GetChatHistoryRequest{
-		RoomId: payload.RoomID,
-	}
-	if payload.Limit != nil {
-		limit := int32(*payload.Limit)
-		message.Limit = &limit
-	}
-	if payload.Offset != nil {
-		offset := int32(*payload.Offset)
-		message.Offset = &offset
-	}
-	return message
-}
-
-// NewGetChatHistoryResult builds the result type of the "get_chat_history"
-// endpoint of the "chat" service from the gRPC response type.
-func NewGetChatHistoryResult(message *chatpb.GetChatHistoryResponse) *chat.GetChatHistoryResult {
-	result := &chat.GetChatHistoryResult{
-		TotalCount: int(message.TotalCount),
-	}
-	if message.Messages != nil {
-		result.Messages = make([]*chat.ChatMessage, len(message.Messages))
-		for i, val := range message.Messages {
-			result.Messages[i] = &chat.ChatMessage{
-				MessageID:   val.MessageId,
-				UserID:      val.UserId,
-				UserName:    val.UserName,
-				Message:     val.Message_,
-				MessageType: val.MessageType,
-				Timestamp:   val.Timestamp,
-			}
+// NewHistoryResult builds the result type of the "history" endpoint of the
+// "chat" service from the gRPC response type.
+func NewHistoryResult(message *chatpb.HistoryResponse) []*chat.Chat {
+	result := make([]*chat.Chat, len(message.Field))
+	for i, val := range message.Field {
+		result[i] = &chat.Chat{
+			UserID:    val.UserId,
+			Message:   val.Message_,
+			ID:        val.Id,
+			CreatedAt: val.CreatedAt,
+			UpdatedAt: val.UpdatedAt,
 		}
 	}
 	return result
 }
 
-// ValidateGetChatHistoryResponse runs the validations defined on
-// GetChatHistoryResponse.
-func ValidateGetChatHistoryResponse(message *chatpb.GetChatHistoryResponse) (err error) {
-	if message.Messages == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("messages", "message"))
+// NewProtoRoomListRequest builds the gRPC request type from the payload of the
+// "room-list" endpoint of the "chat" service.
+func NewProtoRoomListRequest() *chatpb.RoomListRequest {
+	message := &chatpb.RoomListRequest{}
+	return message
+}
+
+// NewRoomListResult builds the result type of the "room-list" endpoint of the
+// "chat" service from the gRPC response type.
+func NewRoomListResult(message *chatpb.RoomListResponse) []string {
+	result := make([]string, len(message.Field))
+	for i, val := range message.Field {
+		result[i] = val
 	}
-	return
+	return result
+}
+
+// NewProtoJoinRoomRequest builds the gRPC request type from the payload of the
+// "join-room" endpoint of the "chat" service.
+func NewProtoJoinRoomRequest(payload *chat.JoinRoomPayload) *chatpb.JoinRoomRequest {
+	message := &chatpb.JoinRoomRequest{
+		InviteKey: payload.InviteKey,
+	}
+	return message
+}
+
+// NewJoinRoomResult builds the result type of the "join-room" endpoint of the
+// "chat" service from the gRPC response type.
+func NewJoinRoomResult(message *chatpb.JoinRoomResponse) string {
+	result := message.Field
+	return result
+}
+
+// NewProtoInviteRoomRequest builds the gRPC request type from the payload of
+// the "invite-room" endpoint of the "chat" service.
+func NewProtoInviteRoomRequest(payload *chat.InviteRoomPayload) *chatpb.InviteRoomRequest {
+	message := &chatpb.InviteRoomRequest{
+		RoomId: payload.RoomID,
+		UserId: payload.UserID,
+	}
+	return message
+}
+
+// NewInviteRoomResult builds the result type of the "invite-room" endpoint of
+// the "chat" service from the gRPC response type.
+func NewInviteRoomResult(message *chatpb.InviteRoomResponse) string {
+	result := message.Field
+	return result
+}
+
+func NewStreamRoomResponseChat2(v *chatpb.StreamRoomResponse) *chat.Chat {
+	result := &chat.Chat{
+		UserID:    v.UserId,
+		Message:   v.Message_,
+		ID:        v.Id,
+		CreatedAt: v.CreatedAt,
+		UpdatedAt: v.UpdatedAt,
+	}
+	return result
+}
+
+func NewProtoStreamRoomStreamingRequest(spayload string) *chatpb.StreamRoomStreamingRequest {
+	v := &chatpb.StreamRoomStreamingRequest{}
+	v.Field = spayload
+	return v
 }

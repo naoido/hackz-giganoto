@@ -11,79 +11,91 @@ package chat.v1;
 
 option go_package = "/chat.v1pb";
 
-// Bidirectional chat service
+// Real-time chat service with bidirectional streaming
 service Chat {
-	// Send a message to a chat room
-	rpc SendMessage (SendMessageRequest) returns (SendMessageResponse);
-	// Join a chat room and receive messages
-	rpc JoinChat (JoinChatRequest) returns (stream JoinChatResponse);
-	// Get chat history for a room
-	rpc GetChatHistory (GetChatHistoryRequest) returns (GetChatHistoryResponse);
+	// Creates a new chat room
+	rpc CreateRoom (CreateRoomRequest) returns (CreateRoomResponse);
+	// Get all chat rooms history
+	rpc History (HistoryRequest) returns (HistoryResponse);
+	// Get all chat rooms history
+	rpc RoomList (RoomListRequest) returns (RoomListResponse);
+	// Creates a new chat room
+	rpc JoinRoom (JoinRoomRequest) returns (JoinRoomResponse);
+	// Creates a new chat room
+	rpc InviteRoom (InviteRoomRequest) returns (InviteRoomResponse);
+	// Streams chat room events on a chat room
+	rpc StreamRoom (stream StreamRoomStreamingRequest) returns (stream StreamRoomResponse);
 }
 
-message SendMessageRequest {
-	// Chat room ID
-	string room_id = 1;
-	// Message content
-	string message_ = 2;
-	// Message type (text, image, file)
-	optional string message_type = 3;
+message CreateRoomRequest {
 }
 
-message SendMessageResponse {
-	// Message ID
-	string message_id = 1;
-	// Message timestamp
-	string timestamp = 2;
+message CreateRoomResponse {
+	string field = 1;
 }
 
-message JoinChatRequest {
-	// Chat room ID
+message HistoryRequest {
+	// The id of the room
 	string room_id = 1;
 }
 
-message JoinChatResponse {
-	// Message ID
-	string message_id = 1;
-	// Sender user ID
-	string user_id = 2;
-	// Sender user name
-	string user_name = 3;
-	// Message content
-	string message_ = 4;
-	// Message type
-	optional string message_type = 5;
-	// Message timestamp
-	string timestamp = 6;
-}
-
-message GetChatHistoryRequest {
-	// Chat room ID
-	string room_id = 1;
-	// Number of messages to retrieve
-	optional sint32 limit = 2;
-	// Offset for pagination
-	optional sint32 offset = 3;
-}
-
-message GetChatHistoryResponse {
-	// Chat messages
-	repeated ChatMessage messages = 1;
-	// Total number of messages
-	sint32 total_count = 2;
+message HistoryResponse {
+	repeated Chat2 field = 1;
 }
 // Chat message
-message ChatMessage {
-	// Message ID
-	string message_id = 1;
-	// Sender user ID
-	string user_id = 2;
-	// Sender user name
-	string user_name = 3;
+message Chat2 {
+	// user_id
+	string user_id = 1;
 	// Message content
-	string message_ = 4;
-	// Message type
-	optional string message_type = 5;
-	// Message timestamp
-	string timestamp = 6;
+	string message_ = 2;
+	// ID
+	string id = 3;
+	// Created timestamp
+	sint64 created_at = 4;
+	// Updated timestamp
+	sint64 updated_at = 5;
+}
+
+message RoomListRequest {
+}
+
+message RoomListResponse {
+	repeated string field = 1;
+}
+
+message JoinRoomRequest {
+	// Invite key
+	string invite_key = 1;
+}
+
+message JoinRoomResponse {
+	string field = 1;
+}
+
+message InviteRoomRequest {
+	// The id of the room
+	string room_id = 1;
+	// The id of the user
+	string user_id = 2;
+}
+
+message InviteRoomResponse {
+	string field = 1;
+}
+
+message StreamRoomStreamingRequest {
+	string field = 1;
+}
+
+message StreamRoomResponse {
+	// user_id
+	string user_id = 1;
+	// Message content
+	string message_ = 2;
+	// ID
+	string id = 3;
+	// Created timestamp
+	sint64 created_at = 4;
+	// Updated timestamp
+	sint64 updated_at = 5;
 }

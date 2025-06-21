@@ -21,16 +21,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/AuthURLResponseBody'
                             example:
-                                auth_url: Itaque excepturi repellendus rerum tempore velit.
-                                state: Consectetur et saepe voluptas ex sit.
+                                auth_url: Commodi voluptatem alias dolore est.
+                                state: Consequatur sit sit doloremque.
                 "500":
                     description: 'internal_error: Internal Server Error response.'
                     content:
                         application/json:
                             schema:
                                 type: string
-                                example: Tempore quo modi ab et qui.
-                            example: Similique delectus maiores quidem hic veritatis distinctio.
+                                example: Quia amet.
+                            example: Blanditiis dolores.
     /auth/github/callback:
         get:
             tags:
@@ -47,8 +47,8 @@ paths:
                   schema:
                     type: string
                     description: Authorization code from GitHub
-                    example: Exercitationem aut.
-                  example: Qui inventore amet deserunt ex laboriosam.
+                    example: Sapiente quam minima.
+                  example: Corporis debitis reprehenderit.
                 - name: state
                   in: query
                   description: OAuth state parameter for validation
@@ -57,8 +57,8 @@ paths:
                   schema:
                     type: string
                     description: OAuth state parameter for validation
-                    example: Et rerum et.
-                  example: Saepe quia.
+                    example: Quod minima id accusantium perferendis.
+                  example: Est porro.
             responses:
                 "200":
                     description: OK response.
@@ -67,35 +67,34 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/OauthCallbackResponseBody'
                             example:
-                                access_token: Error sed.
-                                expires_in: 3564172555033265585
-                                token_type: Inventore ad inventore at omnis non commodi.
-                                user_id: Dolore est.
-                                userName: Consequatur sit sit doloremque.
+                                access_token: Autem rerum.
+                                expires_in: 1087056026976835113
+                                token_type: Commodi fugit et voluptas.
+                                user_id: Ipsam illum ut repellendus velit qui soluta.
                 "400":
                     description: 'invalid_code: Bad Request response.'
                     content:
                         application/json:
                             schema:
                                 type: string
-                                example: Voluptates deleniti fugit qui.
-                            example: Provident quia maiores voluptatem aut et ipsum.
+                                example: Voluptatibus quia tenetur enim ad.
+                            example: Quo qui ipsum ex dolores unde.
                 "500":
                     description: 'internal_error: Internal Server Error response.'
                     content:
                         application/json:
                             schema:
                                 type: string
-                                example: Aut rerum illum tempora et molestiae.
-                            example: Necessitatibus quia accusantium excepturi sit.
+                                example: Ut aut quo.
+                            example: Eum recusandae maiores qui dolore.
                 "502":
                     description: 'github_error: Bad Gateway response.'
                     content:
                         application/json:
                             schema:
                                 type: string
-                                example: Quisquam pariatur perspiciatis.
-                            example: Quia amet.
+                                example: Cupiditate libero quod natus.
+                            example: Itaque sint dolores.
     /introspect:
         post:
             tags:
@@ -110,7 +109,7 @@ paths:
                         schema:
                             $ref: '#/components/schemas/IntrospectRequestBody'
                         example:
-                            token: Et suscipit.
+                            token: Recusandae non cum perspiciatis error.
             responses:
                 "200":
                     description: OK response.
@@ -119,23 +118,30 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/IntrospectResponseBody'
                             example:
-                                jwt: Molestiae occaecati aspernatur.
+                                active: true
+                                exp: 7217923492750129386
+                                jwt: Autem tenetur et voluptate possimus asperiores ea.
+                                scopes:
+                                    - Rerum tempore velit consequatur consectetur.
+                                    - Saepe voluptas ex sit voluptate.
+                                    - Eveniet molestias.
+                                    - Sequi hic perspiciatis nobis perspiciatis quibusdam.
                 "401":
                     description: 'invalid_token: Unauthorized response.'
                     content:
                         application/json:
                             schema:
                                 type: string
-                                example: Ut iusto cum voluptate.
-                            example: Sit dolorum et error.
+                                example: Exercitationem aut.
+                            example: Vel quisquam aut.
                 "500":
                     description: 'internal_error: Internal Server Error response.'
                     content:
                         application/json:
                             schema:
                                 type: string
-                                example: Qui sit reprehenderit a ut et ea.
-                            example: Quos iusto provident.
+                                example: Qui inventore amet deserunt ex laboriosam.
+                            example: Dolores consectetur sed et pariatur modi non.
 components:
     schemas:
         AuthURLResponseBody:
@@ -144,14 +150,14 @@ components:
                 auth_url:
                     type: string
                     description: GitHub OAuth authorization URL
-                    example: Repudiandae fugiat molestiae aliquid voluptas.
+                    example: Et rerum et.
                 state:
                     type: string
                     description: OAuth state parameter for CSRF protection
-                    example: Modi est adipisci autem rem fuga.
+                    example: Saepe quia.
             example:
-                auth_url: Architecto aspernatur vel.
-                state: Officia nihil sed quas sequi nemo occaecati.
+                auth_url: Placeat et non hic voluptatum.
+                state: Provident quia maiores voluptatem aut et ipsum.
             required:
                 - auth_url
                 - state
@@ -161,52 +167,72 @@ components:
                 token:
                     type: string
                     description: Opaque token to introspect
-                    example: Est dolor libero.
+                    example: Dolorem veniam atque consectetur atque officiis.
             example:
-                token: Minus cupiditate adipisci omnis ex porro.
+                token: Ratione reprehenderit quae voluptas.
             required:
                 - token
         IntrospectResponseBody:
             type: object
             properties:
+                active:
+                    type: boolean
+                    description: Whether the token is active
+                    example: false
+                exp:
+                    type: integer
+                    description: Token expiration timestamp
+                    example: 8404174116512200790
+                    format: int64
                 jwt:
                     type: string
                     description: Internal JWT token for downstream services
-                    example: Illo voluptatem eligendi.
+                    example: Nisi odio velit ducimus facilis molestiae.
+                scopes:
+                    type: array
+                    items:
+                        type: string
+                        example: Optio consequatur excepturi non occaecati.
+                    description: Token scopes
+                    example:
+                        - Deleniti fugit qui qui reiciendis veniam.
+                        - Quisquam pariatur perspiciatis.
+                        - Aut rerum illum tempora et molestiae.
             example:
-                jwt: Quas autem eius suscipit laboriosam laborum voluptas.
+                active: true
+                exp: 9117606062374594975
+                jwt: Sit dolorum et error.
+                scopes:
+                    - Quam similique.
+                    - Maiores quidem hic veritatis distinctio.
             required:
                 - jwt
+                - active
         OauthCallbackResponseBody:
             type: object
             properties:
                 access_token:
                     type: string
                     description: Opaque access token
-                    example: Dolor consequatur et quo similique culpa sint.
+                    example: Necessitatibus quia accusantium excepturi sit.
                 expires_in:
                     type: integer
                     description: Token expiration in seconds
-                    example: 7412543894473354896
+                    example: 5215514942107899905
                     format: int64
                 token_type:
                     type: string
                     description: Token type (Bearer)
-                    example: Qui sint id labore.
+                    example: Aliquam numquam voluptatem ad veritatis qui.
                 user_id:
                     type: string
                     description: GitHub user ID
-                    example: Rerum dolorem veniam atque consectetur.
-                userName:
-                    type: string
-                    description: GitHub user name
-                    example: Officiis autem.
+                    example: Modi qui soluta omnis totam necessitatibus atque.
             example:
-                access_token: Reprehenderit quae.
-                expires_in: 3544532098040696233
-                token_type: Voluptatum nisi odio.
-                user_id: Facilis molestiae sequi quibusdam dolores.
-                userName: Consequatur excepturi non occaecati.
+                access_token: Ea laborum qui animi et iure fugit.
+                expires_in: 4934650466968033813
+                token_type: Totam aut dignissimos distinctio eum est corrupti.
+                user_id: Modi dolorem quaerat voluptas.
             required:
                 - access_token
                 - token_type
