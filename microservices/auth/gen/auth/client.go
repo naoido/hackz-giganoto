@@ -58,7 +58,6 @@ func (c *Client) AuthURL(ctx context.Context) (res *AuthURLResult, err error) {
 
 // OauthCallback calls the "oauth_callback" endpoint of the "auth" service.
 // OauthCallback may return the following errors:
-//   - "github_error" (type GithubError)
 //   - "invalid_state" (type InvalidState)
 //   - "invalid_code" (type InvalidCode)
 //   - "github_error" (type GithubError)

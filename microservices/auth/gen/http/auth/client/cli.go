@@ -22,7 +22,7 @@ func BuildIntrospectPayload(authIntrospectBody string) (*auth.IntrospectPayload,
 	{
 		err = json.Unmarshal([]byte(authIntrospectBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"token\": \"Et suscipit.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"token\": \"Recusandae non cum perspiciatis error.\"\n   }'")
 		}
 	}
 	v := &auth.IntrospectPayload{

@@ -12,31 +12,12 @@ import (
 	profile "object-t.com/hackz-giganoto/microservices/profile/gen/profile"
 )
 
-// NewCreateProfilePayload builds the payload of the "create_profile" endpoint
-// of the "profile" service from the gRPC request type.
-func NewCreateProfilePayload(message *profilepb.CreateProfileRequest, token *string) *profile.CreateProfilePayload {
-	v := &profile.CreateProfilePayload{
-		UserID: message.UserId,
-		Name:   message.Name,
-	}
-	v.Token = token
-	return v
-}
-
-// NewProtoCreateProfileResponse builds the gRPC response type from the result
-// of the "create_profile" endpoint of the "profile" service.
-func NewProtoCreateProfileResponse(result *profile.CreateProfileResult) *profilepb.CreateProfileResponse {
-	message := &profilepb.CreateProfileResponse{
-		UserId: result.UserID,
-		Name:   result.Name,
-	}
-	return message
-}
-
 // NewGetProfilePayload builds the payload of the "get_profile" endpoint of the
 // "profile" service from the gRPC request type.
-func NewGetProfilePayload(token *string) *profile.GetProfilePayload {
-	v := &profile.GetProfilePayload{}
+func NewGetProfilePayload(message *profilepb.GetProfileRequest, token string) *profile.GetProfilePayload {
+	v := &profile.GetProfilePayload{
+		UserID: message.UserId,
+	}
 	v.Token = token
 	return v
 }

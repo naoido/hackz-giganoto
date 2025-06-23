@@ -17,113 +17,207 @@ import (
 	chatpb "object-t.com/hackz-giganoto/microservices/chat/gen/grpc/chat/pb"
 )
 
-// BuildSendMessageFunc builds the remote method to invoke for "chat" service
-// "send_message" endpoint.
-func BuildSendMessageFunc(grpccli chatpb.ChatClient, cliopts ...grpc.CallOption) goagrpc.RemoteFunc {
+// BuildCreateRoomFunc builds the remote method to invoke for "chat" service
+// "create-room" endpoint.
+func BuildCreateRoomFunc(grpccli chatpb.ChatClient, cliopts ...grpc.CallOption) goagrpc.RemoteFunc {
 	return func(ctx context.Context, reqpb any, opts ...grpc.CallOption) (any, error) {
 		for _, opt := range cliopts {
 			opts = append(opts, opt)
 		}
 		if reqpb != nil {
-			return grpccli.SendMessage(ctx, reqpb.(*chatpb.SendMessageRequest), opts...)
+			return grpccli.CreateRoom(ctx, reqpb.(*chatpb.CreateRoomRequest), opts...)
 		}
-		return grpccli.SendMessage(ctx, &chatpb.SendMessageRequest{}, opts...)
+		return grpccli.CreateRoom(ctx, &chatpb.CreateRoomRequest{}, opts...)
 	}
 }
 
-// EncodeSendMessageRequest encodes requests sent to chat send_message endpoint.
-func EncodeSendMessageRequest(ctx context.Context, v any, md *metadata.MD) (any, error) {
-	payload, ok := v.(*chat.SendMessagePayload)
+// EncodeCreateRoomRequest encodes requests sent to chat create-room endpoint.
+func EncodeCreateRoomRequest(ctx context.Context, v any, md *metadata.MD) (any, error) {
+	payload, ok := v.(*chat.CreateRoomPayload)
 	if !ok {
-		return nil, goagrpc.ErrInvalidType("chat", "send_message", "*chat.SendMessagePayload", v)
+		return nil, goagrpc.ErrInvalidType("chat", "create-room", "*chat.CreateRoomPayload", v)
 	}
-	if payload.Token != nil {
-		(*md).Append("authorization", *payload.Token)
-	}
-	return NewProtoSendMessageRequest(payload), nil
+	(*md).Append("authorization", payload.Token)
+	return NewProtoCreateRoomRequest(), nil
 }
 
-// DecodeSendMessageResponse decodes responses from the chat send_message
+// DecodeCreateRoomResponse decodes responses from the chat create-room
 // endpoint.
-func DecodeSendMessageResponse(ctx context.Context, v any, hdr, trlr metadata.MD) (any, error) {
-	message, ok := v.(*chatpb.SendMessageResponse)
+func DecodeCreateRoomResponse(ctx context.Context, v any, hdr, trlr metadata.MD) (any, error) {
+	message, ok := v.(*chatpb.CreateRoomResponse)
 	if !ok {
-		return nil, goagrpc.ErrInvalidType("chat", "send_message", "*chatpb.SendMessageResponse", v)
+		return nil, goagrpc.ErrInvalidType("chat", "create-room", "*chatpb.CreateRoomResponse", v)
 	}
-	res := NewSendMessageResult(message)
+	res := NewCreateRoomResult(message)
 	return res, nil
 }
 
-// BuildJoinChatFunc builds the remote method to invoke for "chat" service
-// "join_chat" endpoint.
-func BuildJoinChatFunc(grpccli chatpb.ChatClient, cliopts ...grpc.CallOption) goagrpc.RemoteFunc {
+// BuildHistoryFunc builds the remote method to invoke for "chat" service
+// "history" endpoint.
+func BuildHistoryFunc(grpccli chatpb.ChatClient, cliopts ...grpc.CallOption) goagrpc.RemoteFunc {
 	return func(ctx context.Context, reqpb any, opts ...grpc.CallOption) (any, error) {
 		for _, opt := range cliopts {
 			opts = append(opts, opt)
 		}
 		if reqpb != nil {
-			return grpccli.JoinChat(ctx, reqpb.(*chatpb.JoinChatRequest), opts...)
+			return grpccli.History(ctx, reqpb.(*chatpb.HistoryRequest), opts...)
 		}
-		return grpccli.JoinChat(ctx, &chatpb.JoinChatRequest{}, opts...)
+		return grpccli.History(ctx, &chatpb.HistoryRequest{}, opts...)
 	}
 }
 
-// EncodeJoinChatRequest encodes requests sent to chat join_chat endpoint.
-func EncodeJoinChatRequest(ctx context.Context, v any, md *metadata.MD) (any, error) {
-	payload, ok := v.(*chat.JoinChatPayload)
+// EncodeHistoryRequest encodes requests sent to chat history endpoint.
+func EncodeHistoryRequest(ctx context.Context, v any, md *metadata.MD) (any, error) {
+	payload, ok := v.(*chat.HistoryPayload)
 	if !ok {
-		return nil, goagrpc.ErrInvalidType("chat", "join_chat", "*chat.JoinChatPayload", v)
+		return nil, goagrpc.ErrInvalidType("chat", "history", "*chat.HistoryPayload", v)
 	}
-	if payload.Token != nil {
-		(*md).Append("authorization", *payload.Token)
-	}
-	return NewProtoJoinChatRequest(payload), nil
+	(*md).Append("authorization", payload.Token)
+	return NewProtoHistoryRequest(payload), nil
 }
 
-// DecodeJoinChatResponse decodes responses from the chat join_chat endpoint.
-func DecodeJoinChatResponse(ctx context.Context, v any, hdr, trlr metadata.MD) (any, error) {
-	return &JoinChatClientStream{
-		stream: v.(chatpb.Chat_JoinChatClient),
+// DecodeHistoryResponse decodes responses from the chat history endpoint.
+func DecodeHistoryResponse(ctx context.Context, v any, hdr, trlr metadata.MD) (any, error) {
+	message, ok := v.(*chatpb.HistoryResponse)
+	if !ok {
+		return nil, goagrpc.ErrInvalidType("chat", "history", "*chatpb.HistoryResponse", v)
+	}
+	res := NewHistoryResult(message)
+	return res, nil
+}
+
+// BuildRoomListFunc builds the remote method to invoke for "chat" service
+// "room-list" endpoint.
+func BuildRoomListFunc(grpccli chatpb.ChatClient, cliopts ...grpc.CallOption) goagrpc.RemoteFunc {
+	return func(ctx context.Context, reqpb any, opts ...grpc.CallOption) (any, error) {
+		for _, opt := range cliopts {
+			opts = append(opts, opt)
+		}
+		if reqpb != nil {
+			return grpccli.RoomList(ctx, reqpb.(*chatpb.RoomListRequest), opts...)
+		}
+		return grpccli.RoomList(ctx, &chatpb.RoomListRequest{}, opts...)
+	}
+}
+
+// EncodeRoomListRequest encodes requests sent to chat room-list endpoint.
+func EncodeRoomListRequest(ctx context.Context, v any, md *metadata.MD) (any, error) {
+	payload, ok := v.(*chat.RoomListPayload)
+	if !ok {
+		return nil, goagrpc.ErrInvalidType("chat", "room-list", "*chat.RoomListPayload", v)
+	}
+	(*md).Append("authorization", payload.Token)
+	return NewProtoRoomListRequest(), nil
+}
+
+// DecodeRoomListResponse decodes responses from the chat room-list endpoint.
+func DecodeRoomListResponse(ctx context.Context, v any, hdr, trlr metadata.MD) (any, error) {
+	message, ok := v.(*chatpb.RoomListResponse)
+	if !ok {
+		return nil, goagrpc.ErrInvalidType("chat", "room-list", "*chatpb.RoomListResponse", v)
+	}
+	res := NewRoomListResult(message)
+	return res, nil
+}
+
+// BuildJoinRoomFunc builds the remote method to invoke for "chat" service
+// "join-room" endpoint.
+func BuildJoinRoomFunc(grpccli chatpb.ChatClient, cliopts ...grpc.CallOption) goagrpc.RemoteFunc {
+	return func(ctx context.Context, reqpb any, opts ...grpc.CallOption) (any, error) {
+		for _, opt := range cliopts {
+			opts = append(opts, opt)
+		}
+		if reqpb != nil {
+			return grpccli.JoinRoom(ctx, reqpb.(*chatpb.JoinRoomRequest), opts...)
+		}
+		return grpccli.JoinRoom(ctx, &chatpb.JoinRoomRequest{}, opts...)
+	}
+}
+
+// EncodeJoinRoomRequest encodes requests sent to chat join-room endpoint.
+func EncodeJoinRoomRequest(ctx context.Context, v any, md *metadata.MD) (any, error) {
+	payload, ok := v.(*chat.JoinRoomPayload)
+	if !ok {
+		return nil, goagrpc.ErrInvalidType("chat", "join-room", "*chat.JoinRoomPayload", v)
+	}
+	(*md).Append("authorization", payload.Token)
+	return NewProtoJoinRoomRequest(payload), nil
+}
+
+// DecodeJoinRoomResponse decodes responses from the chat join-room endpoint.
+func DecodeJoinRoomResponse(ctx context.Context, v any, hdr, trlr metadata.MD) (any, error) {
+	message, ok := v.(*chatpb.JoinRoomResponse)
+	if !ok {
+		return nil, goagrpc.ErrInvalidType("chat", "join-room", "*chatpb.JoinRoomResponse", v)
+	}
+	res := NewJoinRoomResult(message)
+	return res, nil
+}
+
+// BuildInviteRoomFunc builds the remote method to invoke for "chat" service
+// "invite-room" endpoint.
+func BuildInviteRoomFunc(grpccli chatpb.ChatClient, cliopts ...grpc.CallOption) goagrpc.RemoteFunc {
+	return func(ctx context.Context, reqpb any, opts ...grpc.CallOption) (any, error) {
+		for _, opt := range cliopts {
+			opts = append(opts, opt)
+		}
+		if reqpb != nil {
+			return grpccli.InviteRoom(ctx, reqpb.(*chatpb.InviteRoomRequest), opts...)
+		}
+		return grpccli.InviteRoom(ctx, &chatpb.InviteRoomRequest{}, opts...)
+	}
+}
+
+// EncodeInviteRoomRequest encodes requests sent to chat invite-room endpoint.
+func EncodeInviteRoomRequest(ctx context.Context, v any, md *metadata.MD) (any, error) {
+	payload, ok := v.(*chat.InviteRoomPayload)
+	if !ok {
+		return nil, goagrpc.ErrInvalidType("chat", "invite-room", "*chat.InviteRoomPayload", v)
+	}
+	(*md).Append("authorization", payload.Token)
+	return NewProtoInviteRoomRequest(payload), nil
+}
+
+// DecodeInviteRoomResponse decodes responses from the chat invite-room
+// endpoint.
+func DecodeInviteRoomResponse(ctx context.Context, v any, hdr, trlr metadata.MD) (any, error) {
+	message, ok := v.(*chatpb.InviteRoomResponse)
+	if !ok {
+		return nil, goagrpc.ErrInvalidType("chat", "invite-room", "*chatpb.InviteRoomResponse", v)
+	}
+	res := NewInviteRoomResult(message)
+	return res, nil
+}
+
+// BuildStreamRoomFunc builds the remote method to invoke for "chat" service
+// "stream-room" endpoint.
+func BuildStreamRoomFunc(grpccli chatpb.ChatClient, cliopts ...grpc.CallOption) goagrpc.RemoteFunc {
+	return func(ctx context.Context, reqpb any, opts ...grpc.CallOption) (any, error) {
+		for _, opt := range cliopts {
+			opts = append(opts, opt)
+		}
+		if reqpb != nil {
+			return grpccli.StreamRoom(ctx, opts...)
+		}
+		return grpccli.StreamRoom(ctx, opts...)
+	}
+}
+
+// EncodeStreamRoomRequest encodes requests sent to chat stream-room endpoint.
+func EncodeStreamRoomRequest(ctx context.Context, v any, md *metadata.MD) (any, error) {
+	payload, ok := v.(*chat.StreamRoomPayload)
+	if !ok {
+		return nil, goagrpc.ErrInvalidType("chat", "stream-room", "*chat.StreamRoomPayload", v)
+	}
+	(*md).Append("authorization", payload.Token)
+	(*md).Append("room_id", payload.RoomID)
+	return nil, nil
+}
+
+// DecodeStreamRoomResponse decodes responses from the chat stream-room
+// endpoint.
+func DecodeStreamRoomResponse(ctx context.Context, v any, hdr, trlr metadata.MD) (any, error) {
+	return &StreamRoomClientStream{
+		stream: v.(chatpb.Chat_StreamRoomClient),
 	}, nil
-}
-
-// BuildGetChatHistoryFunc builds the remote method to invoke for "chat"
-// service "get_chat_history" endpoint.
-func BuildGetChatHistoryFunc(grpccli chatpb.ChatClient, cliopts ...grpc.CallOption) goagrpc.RemoteFunc {
-	return func(ctx context.Context, reqpb any, opts ...grpc.CallOption) (any, error) {
-		for _, opt := range cliopts {
-			opts = append(opts, opt)
-		}
-		if reqpb != nil {
-			return grpccli.GetChatHistory(ctx, reqpb.(*chatpb.GetChatHistoryRequest), opts...)
-		}
-		return grpccli.GetChatHistory(ctx, &chatpb.GetChatHistoryRequest{}, opts...)
-	}
-}
-
-// EncodeGetChatHistoryRequest encodes requests sent to chat get_chat_history
-// endpoint.
-func EncodeGetChatHistoryRequest(ctx context.Context, v any, md *metadata.MD) (any, error) {
-	payload, ok := v.(*chat.GetChatHistoryPayload)
-	if !ok {
-		return nil, goagrpc.ErrInvalidType("chat", "get_chat_history", "*chat.GetChatHistoryPayload", v)
-	}
-	if payload.Token != nil {
-		(*md).Append("authorization", *payload.Token)
-	}
-	return NewProtoGetChatHistoryRequest(payload), nil
-}
-
-// DecodeGetChatHistoryResponse decodes responses from the chat
-// get_chat_history endpoint.
-func DecodeGetChatHistoryResponse(ctx context.Context, v any, hdr, trlr metadata.MD) (any, error) {
-	message, ok := v.(*chatpb.GetChatHistoryResponse)
-	if !ok {
-		return nil, goagrpc.ErrInvalidType("chat", "get_chat_history", "*chatpb.GetChatHistoryResponse", v)
-	}
-	if err := ValidateGetChatHistoryResponse(message); err != nil {
-		return nil, err
-	}
-	res := NewGetChatHistoryResult(message)
-	return res, nil
 }

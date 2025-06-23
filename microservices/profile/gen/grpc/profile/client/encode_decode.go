@@ -17,44 +17,6 @@ import (
 	profile "object-t.com/hackz-giganoto/microservices/profile/gen/profile"
 )
 
-// BuildCreateProfileFunc builds the remote method to invoke for "profile"
-// service "create_profile" endpoint.
-func BuildCreateProfileFunc(grpccli profilepb.ProfileClient, cliopts ...grpc.CallOption) goagrpc.RemoteFunc {
-	return func(ctx context.Context, reqpb any, opts ...grpc.CallOption) (any, error) {
-		for _, opt := range cliopts {
-			opts = append(opts, opt)
-		}
-		if reqpb != nil {
-			return grpccli.CreateProfile(ctx, reqpb.(*profilepb.CreateProfileRequest), opts...)
-		}
-		return grpccli.CreateProfile(ctx, &profilepb.CreateProfileRequest{}, opts...)
-	}
-}
-
-// EncodeCreateProfileRequest encodes requests sent to profile create_profile
-// endpoint.
-func EncodeCreateProfileRequest(ctx context.Context, v any, md *metadata.MD) (any, error) {
-	payload, ok := v.(*profile.CreateProfilePayload)
-	if !ok {
-		return nil, goagrpc.ErrInvalidType("profile", "create_profile", "*profile.CreateProfilePayload", v)
-	}
-	if payload.Token != nil {
-		(*md).Append("authorization", *payload.Token)
-	}
-	return NewProtoCreateProfileRequest(payload), nil
-}
-
-// DecodeCreateProfileResponse decodes responses from the profile
-// create_profile endpoint.
-func DecodeCreateProfileResponse(ctx context.Context, v any, hdr, trlr metadata.MD) (any, error) {
-	message, ok := v.(*profilepb.CreateProfileResponse)
-	if !ok {
-		return nil, goagrpc.ErrInvalidType("profile", "create_profile", "*profilepb.CreateProfileResponse", v)
-	}
-	res := NewCreateProfileResult(message)
-	return res, nil
-}
-
 // BuildGetProfileFunc builds the remote method to invoke for "profile" service
 // "get_profile" endpoint.
 func BuildGetProfileFunc(grpccli profilepb.ProfileClient, cliopts ...grpc.CallOption) goagrpc.RemoteFunc {
@@ -76,10 +38,8 @@ func EncodeGetProfileRequest(ctx context.Context, v any, md *metadata.MD) (any, 
 	if !ok {
 		return nil, goagrpc.ErrInvalidType("profile", "get_profile", "*profile.GetProfilePayload", v)
 	}
-	if payload.Token != nil {
-		(*md).Append("authorization", *payload.Token)
-	}
-	return NewProtoGetProfileRequest(), nil
+	(*md).Append("authorization", payload.Token)
+	return NewProtoGetProfileRequest(payload), nil
 }
 
 // DecodeGetProfileResponse decodes responses from the profile get_profile

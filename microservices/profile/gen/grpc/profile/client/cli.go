@@ -15,44 +15,26 @@ import (
 	profile "object-t.com/hackz-giganoto/microservices/profile/gen/profile"
 )
 
-// BuildCreateProfilePayload builds the payload for the profile create_profile
+// BuildGetProfilePayload builds the payload for the profile get_profile
 // endpoint from CLI flags.
-func BuildCreateProfilePayload(profileCreateProfileMessage string, profileCreateProfileToken string) (*profile.CreateProfilePayload, error) {
+func BuildGetProfilePayload(profileGetProfileMessage string, profileGetProfileToken string) (*profile.GetProfilePayload, error) {
 	var err error
-	var message profilepb.CreateProfileRequest
+	var message profilepb.GetProfileRequest
 	{
-		if profileCreateProfileMessage != "" {
-			err = json.Unmarshal([]byte(profileCreateProfileMessage), &message)
+		if profileGetProfileMessage != "" {
+			err = json.Unmarshal([]byte(profileGetProfileMessage), &message)
 			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"name\": \"Aut magnam laborum ad porro.\",\n      \"user_id\": \"Omnis enim omnis autem accusamus.\"\n   }'")
+				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"user_id\": \"Omnis alias quo numquam numquam molestiae quod.\"\n   }'")
 			}
 		}
 	}
-	var token *string
+	var token string
 	{
-		if profileCreateProfileToken != "" {
-			token = &profileCreateProfileToken
-		}
+		token = profileGetProfileToken
 	}
-	v := &profile.CreateProfilePayload{
+	v := &profile.GetProfilePayload{
 		UserID: message.UserId,
-		Name:   message.Name,
 	}
-	v.Token = token
-
-	return v, nil
-}
-
-// BuildGetProfilePayload builds the payload for the profile get_profile
-// endpoint from CLI flags.
-func BuildGetProfilePayload(profileGetProfileToken string) (*profile.GetProfilePayload, error) {
-	var token *string
-	{
-		if profileGetProfileToken != "" {
-			token = &profileGetProfileToken
-		}
-	}
-	v := &profile.GetProfilePayload{}
 	v.Token = token
 
 	return v, nil
@@ -67,7 +49,7 @@ func BuildUpdateProfilePayload(profileUpdateProfileMessage string, profileUpdate
 		if profileUpdateProfileMessage != "" {
 			err = json.Unmarshal([]byte(profileUpdateProfileMessage), &message)
 			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"name\": \"Voluptas tenetur et.\"\n   }'")
+				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"name\": \"Omnis enim omnis autem accusamus.\"\n   }'")
 			}
 		}
 	}

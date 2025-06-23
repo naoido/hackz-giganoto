@@ -12,153 +12,280 @@ import (
 	"strings"
 
 	goagrpc "goa.design/goa/v3/grpc"
+	goa "goa.design/goa/v3/pkg"
 	"google.golang.org/grpc/metadata"
 	chat "object-t.com/hackz-giganoto/microservices/chat/gen/chat"
 	chatpb "object-t.com/hackz-giganoto/microservices/chat/gen/grpc/chat/pb"
 )
 
-// EncodeSendMessageResponse encodes responses from the "chat" service
-// "send_message" endpoint.
-func EncodeSendMessageResponse(ctx context.Context, v any, hdr, trlr *metadata.MD) (any, error) {
-	result, ok := v.(*chat.SendMessageResult)
+// EncodeCreateRoomResponse encodes responses from the "chat" service
+// "create-room" endpoint.
+func EncodeCreateRoomResponse(ctx context.Context, v any, hdr, trlr *metadata.MD) (any, error) {
+	result, ok := v.(string)
 	if !ok {
-		return nil, goagrpc.ErrInvalidType("chat", "send_message", "*chat.SendMessageResult", v)
+		return nil, goagrpc.ErrInvalidType("chat", "create-room", "string", v)
 	}
-	resp := NewProtoSendMessageResponse(result)
+	resp := NewProtoCreateRoomResponse(result)
 	return resp, nil
 }
 
-// DecodeSendMessageRequest decodes requests sent to "chat" service
-// "send_message" endpoint.
-func DecodeSendMessageRequest(ctx context.Context, v any, md metadata.MD) (any, error) {
+// DecodeCreateRoomRequest decodes requests sent to "chat" service
+// "create-room" endpoint.
+func DecodeCreateRoomRequest(ctx context.Context, v any, md metadata.MD) (any, error) {
 	var (
-		token *string
+		token string
 		err   error
 	)
 	{
-		if vals := md.Get("authorization"); len(vals) > 0 {
-			token = &vals[0]
+		if vals := md.Get("authorization"); len(vals) == 0 {
+			err = goa.MergeErrors(err, goa.MissingFieldError("authorization", "metadata"))
+		} else {
+			token = vals[0]
 		}
 	}
 	if err != nil {
 		return nil, err
 	}
-	var (
-		message *chatpb.SendMessageRequest
-		ok      bool
-	)
+	var payload *chat.CreateRoomPayload
 	{
-		if message, ok = v.(*chatpb.SendMessageRequest); !ok {
-			return nil, goagrpc.ErrInvalidType("chat", "send_message", "*chatpb.SendMessageRequest", v)
-		}
-	}
-	var payload *chat.SendMessagePayload
-	{
-		payload = NewSendMessagePayload(message, token)
-		if payload.Token != nil {
-			if strings.Contains(*payload.Token, " ") {
-				// Remove authorization scheme prefix (e.g. "Bearer")
-				cred := strings.SplitN(*payload.Token, " ", 2)[1]
-				payload.Token = &cred
-			}
+		payload = NewCreateRoomPayload(token)
+		if strings.Contains(payload.Token, " ") {
+			// Remove authorization scheme prefix (e.g. "Bearer")
+			cred := strings.SplitN(payload.Token, " ", 2)[1]
+			payload.Token = cred
 		}
 	}
 	return payload, nil
 }
 
-// EncodeJoinChatResponse encodes responses from the "chat" service "join_chat"
+// EncodeHistoryResponse encodes responses from the "chat" service "history"
 // endpoint.
-func EncodeJoinChatResponse(ctx context.Context, v any, hdr, trlr *metadata.MD) (any, error) {
-	result, ok := v.(*chat.JoinChatResult)
+func EncodeHistoryResponse(ctx context.Context, v any, hdr, trlr *metadata.MD) (any, error) {
+	result, ok := v.([]*chat.Chat)
 	if !ok {
-		return nil, goagrpc.ErrInvalidType("chat", "join_chat", "*chat.JoinChatResult", v)
+		return nil, goagrpc.ErrInvalidType("chat", "history", "[]*chat.Chat", v)
 	}
-	resp := NewProtoJoinChatResponse(result)
+	resp := NewProtoHistoryResponse(result)
 	return resp, nil
 }
 
-// DecodeJoinChatRequest decodes requests sent to "chat" service "join_chat"
+// DecodeHistoryRequest decodes requests sent to "chat" service "history"
 // endpoint.
-func DecodeJoinChatRequest(ctx context.Context, v any, md metadata.MD) (any, error) {
+func DecodeHistoryRequest(ctx context.Context, v any, md metadata.MD) (any, error) {
 	var (
-		token *string
+		token string
 		err   error
 	)
 	{
-		if vals := md.Get("authorization"); len(vals) > 0 {
-			token = &vals[0]
+		if vals := md.Get("authorization"); len(vals) == 0 {
+			err = goa.MergeErrors(err, goa.MissingFieldError("authorization", "metadata"))
+		} else {
+			token = vals[0]
 		}
 	}
 	if err != nil {
 		return nil, err
 	}
 	var (
-		message *chatpb.JoinChatRequest
+		message *chatpb.HistoryRequest
 		ok      bool
 	)
 	{
-		if message, ok = v.(*chatpb.JoinChatRequest); !ok {
-			return nil, goagrpc.ErrInvalidType("chat", "join_chat", "*chatpb.JoinChatRequest", v)
+		if message, ok = v.(*chatpb.HistoryRequest); !ok {
+			return nil, goagrpc.ErrInvalidType("chat", "history", "*chatpb.HistoryRequest", v)
 		}
 	}
-	var payload *chat.JoinChatPayload
+	var payload *chat.HistoryPayload
 	{
-		payload = NewJoinChatPayload(message, token)
-		if payload.Token != nil {
-			if strings.Contains(*payload.Token, " ") {
-				// Remove authorization scheme prefix (e.g. "Bearer")
-				cred := strings.SplitN(*payload.Token, " ", 2)[1]
-				payload.Token = &cred
-			}
+		payload = NewHistoryPayload(message, token)
+		if strings.Contains(payload.Token, " ") {
+			// Remove authorization scheme prefix (e.g. "Bearer")
+			cred := strings.SplitN(payload.Token, " ", 2)[1]
+			payload.Token = cred
 		}
 	}
 	return payload, nil
 }
 
-// EncodeGetChatHistoryResponse encodes responses from the "chat" service
-// "get_chat_history" endpoint.
-func EncodeGetChatHistoryResponse(ctx context.Context, v any, hdr, trlr *metadata.MD) (any, error) {
-	result, ok := v.(*chat.GetChatHistoryResult)
+// EncodeRoomListResponse encodes responses from the "chat" service "room-list"
+// endpoint.
+func EncodeRoomListResponse(ctx context.Context, v any, hdr, trlr *metadata.MD) (any, error) {
+	result, ok := v.([]string)
 	if !ok {
-		return nil, goagrpc.ErrInvalidType("chat", "get_chat_history", "*chat.GetChatHistoryResult", v)
+		return nil, goagrpc.ErrInvalidType("chat", "room-list", "[]string", v)
 	}
-	resp := NewProtoGetChatHistoryResponse(result)
+	resp := NewProtoRoomListResponse(result)
 	return resp, nil
 }
 
-// DecodeGetChatHistoryRequest decodes requests sent to "chat" service
-// "get_chat_history" endpoint.
-func DecodeGetChatHistoryRequest(ctx context.Context, v any, md metadata.MD) (any, error) {
+// DecodeRoomListRequest decodes requests sent to "chat" service "room-list"
+// endpoint.
+func DecodeRoomListRequest(ctx context.Context, v any, md metadata.MD) (any, error) {
 	var (
-		token *string
+		token string
 		err   error
 	)
 	{
-		if vals := md.Get("authorization"); len(vals) > 0 {
-			token = &vals[0]
+		if vals := md.Get("authorization"); len(vals) == 0 {
+			err = goa.MergeErrors(err, goa.MissingFieldError("authorization", "metadata"))
+		} else {
+			token = vals[0]
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	var payload *chat.RoomListPayload
+	{
+		payload = NewRoomListPayload(token)
+		if strings.Contains(payload.Token, " ") {
+			// Remove authorization scheme prefix (e.g. "Bearer")
+			cred := strings.SplitN(payload.Token, " ", 2)[1]
+			payload.Token = cred
+		}
+	}
+	return payload, nil
+}
+
+// EncodeJoinRoomResponse encodes responses from the "chat" service "join-room"
+// endpoint.
+func EncodeJoinRoomResponse(ctx context.Context, v any, hdr, trlr *metadata.MD) (any, error) {
+	result, ok := v.(string)
+	if !ok {
+		return nil, goagrpc.ErrInvalidType("chat", "join-room", "string", v)
+	}
+	resp := NewProtoJoinRoomResponse(result)
+	return resp, nil
+}
+
+// DecodeJoinRoomRequest decodes requests sent to "chat" service "join-room"
+// endpoint.
+func DecodeJoinRoomRequest(ctx context.Context, v any, md metadata.MD) (any, error) {
+	var (
+		token string
+		err   error
+	)
+	{
+		if vals := md.Get("authorization"); len(vals) == 0 {
+			err = goa.MergeErrors(err, goa.MissingFieldError("authorization", "metadata"))
+		} else {
+			token = vals[0]
 		}
 	}
 	if err != nil {
 		return nil, err
 	}
 	var (
-		message *chatpb.GetChatHistoryRequest
+		message *chatpb.JoinRoomRequest
 		ok      bool
 	)
 	{
-		if message, ok = v.(*chatpb.GetChatHistoryRequest); !ok {
-			return nil, goagrpc.ErrInvalidType("chat", "get_chat_history", "*chatpb.GetChatHistoryRequest", v)
+		if message, ok = v.(*chatpb.JoinRoomRequest); !ok {
+			return nil, goagrpc.ErrInvalidType("chat", "join-room", "*chatpb.JoinRoomRequest", v)
 		}
 	}
-	var payload *chat.GetChatHistoryPayload
+	var payload *chat.JoinRoomPayload
 	{
-		payload = NewGetChatHistoryPayload(message, token)
-		if payload.Token != nil {
-			if strings.Contains(*payload.Token, " ") {
-				// Remove authorization scheme prefix (e.g. "Bearer")
-				cred := strings.SplitN(*payload.Token, " ", 2)[1]
-				payload.Token = &cred
-			}
+		payload = NewJoinRoomPayload(message, token)
+		if strings.Contains(payload.Token, " ") {
+			// Remove authorization scheme prefix (e.g. "Bearer")
+			cred := strings.SplitN(payload.Token, " ", 2)[1]
+			payload.Token = cred
+		}
+	}
+	return payload, nil
+}
+
+// EncodeInviteRoomResponse encodes responses from the "chat" service
+// "invite-room" endpoint.
+func EncodeInviteRoomResponse(ctx context.Context, v any, hdr, trlr *metadata.MD) (any, error) {
+	result, ok := v.(string)
+	if !ok {
+		return nil, goagrpc.ErrInvalidType("chat", "invite-room", "string", v)
+	}
+	resp := NewProtoInviteRoomResponse(result)
+	return resp, nil
+}
+
+// DecodeInviteRoomRequest decodes requests sent to "chat" service
+// "invite-room" endpoint.
+func DecodeInviteRoomRequest(ctx context.Context, v any, md metadata.MD) (any, error) {
+	var (
+		token string
+		err   error
+	)
+	{
+		if vals := md.Get("authorization"); len(vals) == 0 {
+			err = goa.MergeErrors(err, goa.MissingFieldError("authorization", "metadata"))
+		} else {
+			token = vals[0]
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	var (
+		message *chatpb.InviteRoomRequest
+		ok      bool
+	)
+	{
+		if message, ok = v.(*chatpb.InviteRoomRequest); !ok {
+			return nil, goagrpc.ErrInvalidType("chat", "invite-room", "*chatpb.InviteRoomRequest", v)
+		}
+	}
+	var payload *chat.InviteRoomPayload
+	{
+		payload = NewInviteRoomPayload(message, token)
+		if strings.Contains(payload.Token, " ") {
+			// Remove authorization scheme prefix (e.g. "Bearer")
+			cred := strings.SplitN(payload.Token, " ", 2)[1]
+			payload.Token = cred
+		}
+	}
+	return payload, nil
+}
+
+// EncodeStreamRoomResponse encodes responses from the "chat" service
+// "stream-room" endpoint.
+func EncodeStreamRoomResponse(ctx context.Context, v any, hdr, trlr *metadata.MD) (any, error) {
+	result, ok := v.(*chat.Chat)
+	if !ok {
+		return nil, goagrpc.ErrInvalidType("chat", "stream-room", "*chat.Chat", v)
+	}
+	resp := NewProtoStreamRoomResponse(result)
+	return resp, nil
+}
+
+// DecodeStreamRoomRequest decodes requests sent to "chat" service
+// "stream-room" endpoint.
+func DecodeStreamRoomRequest(ctx context.Context, v any, md metadata.MD) (any, error) {
+	var (
+		token  string
+		roomID string
+		err    error
+	)
+	{
+		if vals := md.Get("authorization"); len(vals) == 0 {
+			err = goa.MergeErrors(err, goa.MissingFieldError("authorization", "metadata"))
+		} else {
+			token = vals[0]
+		}
+		if vals := md.Get("room_id"); len(vals) == 0 {
+			err = goa.MergeErrors(err, goa.MissingFieldError("room_id", "metadata"))
+		} else {
+			roomID = vals[0]
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	var payload *chat.StreamRoomPayload
+	{
+		payload = NewStreamRoomPayload(token, roomID)
+		if strings.Contains(payload.Token, " ") {
+			// Remove authorization scheme prefix (e.g. "Bearer")
+			cred := strings.SplitN(payload.Token, " ", 2)[1]
+			payload.Token = cred
 		}
 	}
 	return payload, nil

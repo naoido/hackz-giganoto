@@ -6,17 +6,17 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"object-t.com/hackz-giganoto/pkg/telemetry"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 
-	// "github.com/redis/go-redis/v9"
 	"goa.design/clue/debug"
 	"goa.design/clue/log"
 	authapi "object-t.com/hackz-giganoto/microservices/auth"
 	auth "object-t.com/hackz-giganoto/microservices/auth/gen/auth"
-	redis_client "object-t.com/hackz-giganoto/pkg/redis"
 )
 
 func main() {
@@ -30,6 +30,28 @@ func main() {
 		dbgF      = flag.Bool("debug", false, "Log request and response bodies")
 	)
 	flag.Parse()
+
+	// Initialize OpenTelemetry
+	config := telemetry.DefaultConfig("auth-service")
+	if endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"); endpoint != "" {
+		// Remove http:// prefix if present for gRPC connection
+		if strings.HasPrefix(endpoint, "http://") {
+			endpoint = strings.TrimPrefix(endpoint, "http://")
+		}
+		config.CollectorAddr = endpoint
+	}
+	if serviceName := os.Getenv("OTEL_SERVICE_NAME"); serviceName != "" {
+		config.ServiceName = serviceName
+	}
+	if serviceVersion := os.Getenv("OTEL_SERVICE_VERSION"); serviceVersion != "" {
+		config.ServiceVersion = serviceVersion
+	}
+
+	_, cleanup, err := telemetry.Init(context.Background(), config)
+	if err != nil {
+		log.Fatalf(context.Background(), err, "failed to initialize OpenTelemetry")
+	}
+	defer cleanup()
 
 	// Setup logger. Replace logger with your own log package of choice.
 	format := log.FormatJSON
@@ -46,7 +68,7 @@ func main() {
 	if redisAddr == "" {
 		redisAddr = "localhost:6379"
 	}
-	redisClient, err := redis_client.NewClient(ctx, redisAddr, "", 0)
+
 	if err != nil {
 		log.Fatalf(ctx, err, "failed to connect to redis")
 	}
@@ -56,7 +78,7 @@ func main() {
 		authSvc auth.Service
 	)
 	{
-		authSvc = authapi.NewAuth(redisClient)
+		authSvc = authapi.NewAuth()
 	}
 
 	// Wrap the services in endpoints that can be invoked from other services

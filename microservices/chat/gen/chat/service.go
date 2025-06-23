@@ -13,14 +13,20 @@ import (
 	"goa.design/goa/v3/security"
 )
 
-// Bidirectional chat service
+// Real-time chat service with bidirectional streaming
 type Service interface {
-	// Send a message to a chat room
-	SendMessage(context.Context, *SendMessagePayload) (res *SendMessageResult, err error)
-	// Join a chat room and receive messages
-	JoinChat(context.Context, *JoinChatPayload, JoinChatServerStream) (err error)
-	// Get chat history for a room
-	GetChatHistory(context.Context, *GetChatHistoryPayload) (res *GetChatHistoryResult, err error)
+	// Creates a new chat room
+	CreateRoom(context.Context, *CreateRoomPayload) (res string, err error)
+	// Get all chat rooms history
+	History(context.Context, *HistoryPayload) (res []*Chat, err error)
+	// Get all chat rooms history
+	RoomList(context.Context, *RoomListPayload) (res []string, err error)
+	// Creates a new chat room
+	JoinRoom(context.Context, *JoinRoomPayload) (res string, err error)
+	// Creates a new chat room
+	InviteRoom(context.Context, *InviteRoomPayload) (res string, err error)
+	// Streams chat room events on a chat room
+	StreamRoom(context.Context, *StreamRoomPayload, StreamRoomServerStream) (err error)
 }
 
 // Auther defines the authorization functions to be implemented by the service.
@@ -30,7 +36,7 @@ type Auther interface {
 }
 
 // APIName is the name of the API as defined in the design.
-const APIName = "profile"
+const APIName = "chat"
 
 // APIVersion is the version of the API as defined in the design.
 const APIVersion = "1.0"
@@ -43,178 +49,181 @@ const ServiceName = "chat"
 // MethodNames lists the service method names as defined in the design. These
 // are the same values that are set in the endpoint request contexts under the
 // MethodKey key.
-var MethodNames = [3]string{"send_message", "join_chat", "get_chat_history"}
+var MethodNames = [6]string{"create-room", "history", "room-list", "join-room", "invite-room", "stream-room"}
 
-// JoinChatServerStream is the interface a "join_chat" endpoint server stream
-// must satisfy.
-type JoinChatServerStream interface {
-	// Send streams instances of "JoinChatResult".
-	Send(*JoinChatResult) error
-	// SendWithContext streams instances of "JoinChatResult" with context.
-	SendWithContext(context.Context, *JoinChatResult) error
+// StreamRoomServerStream is the interface a "stream-room" endpoint server
+// stream must satisfy.
+type StreamRoomServerStream interface {
+	// Send streams instances of "Chat".
+	Send(*Chat) error
+	// SendWithContext streams instances of "Chat" with context.
+	SendWithContext(context.Context, *Chat) error
+	// Recv reads instances of "string" from the stream.
+	Recv() (string, error)
+	// RecvWithContext reads instances of "string" from the stream with context.
+	RecvWithContext(context.Context) (string, error)
 	// Close closes the stream.
 	Close() error
 }
 
-// JoinChatClientStream is the interface a "join_chat" endpoint client stream
-// must satisfy.
-type JoinChatClientStream interface {
-	// Recv reads instances of "JoinChatResult" from the stream.
-	Recv() (*JoinChatResult, error)
-	// RecvWithContext reads instances of "JoinChatResult" from the stream with
-	// context.
-	RecvWithContext(context.Context) (*JoinChatResult, error)
+// StreamRoomClientStream is the interface a "stream-room" endpoint client
+// stream must satisfy.
+type StreamRoomClientStream interface {
+	// Send streams instances of "string".
+	Send(string) error
+	// SendWithContext streams instances of "string" with context.
+	SendWithContext(context.Context, string) error
+	// Recv reads instances of "Chat" from the stream.
+	Recv() (*Chat, error)
+	// RecvWithContext reads instances of "Chat" from the stream with context.
+	RecvWithContext(context.Context) (*Chat, error)
+	// Close closes the stream.
+	Close() error
 }
 
-// Chat message
-type ChatMessage struct {
-	// Message ID
-	MessageID string
-	// Sender user ID
+// Chat is the result type of the chat service stream-room method.
+type Chat struct {
+	// user_id
 	UserID string
-	// Sender user name
-	UserName string
 	// Message content
 	Message string
-	// Message type
-	MessageType *string
-	// Message timestamp
-	Timestamp string
-}
-
-// GetChatHistoryPayload is the payload type of the chat service
-// get_chat_history method.
-type GetChatHistoryPayload struct {
-	// JWT token
-	Token *string
-	// Chat room ID
-	RoomID string
-	// Number of messages to retrieve
-	Limit *int
-	// Offset for pagination
-	Offset *int
-}
-
-// GetChatHistoryResult is the result type of the chat service get_chat_history
-// method.
-type GetChatHistoryResult struct {
-	// Chat messages
-	Messages []*ChatMessage
-	// Total number of messages
-	TotalCount int
-}
-
-// JoinChatPayload is the payload type of the chat service join_chat method.
-type JoinChatPayload struct {
-	// JWT token
-	Token *string
-	// Chat room ID
+	// ID
+	ID string
+	// Created timestamp
+	CreatedAt int64
+	// Updated timestamp
+	UpdatedAt int64
+	// room
 	RoomID string
 }
 
-// JoinChatResult is the result type of the chat service join_chat method.
-type JoinChatResult struct {
-	// Message ID
-	MessageID string
-	// Sender user ID
+// CreateRoomPayload is the payload type of the chat service create-room method.
+type CreateRoomPayload struct {
+	// The access token
+	Token string
+}
+
+// HistoryPayload is the payload type of the chat service history method.
+type HistoryPayload struct {
+	// The access token
+	Token string
+	// The id of the room
+	RoomID string
+}
+
+// InviteRoomPayload is the payload type of the chat service invite-room method.
+type InviteRoomPayload struct {
+	// The access token
+	Token string
+	// The id of the room
+	RoomID string
+	// The id of the user
 	UserID string
-	// Sender user name
-	UserName string
-	// Message content
-	Message string
-	// Message type
-	MessageType *string
-	// Message timestamp
-	Timestamp string
 }
 
-// SendMessagePayload is the payload type of the chat service send_message
-// method.
-type SendMessagePayload struct {
-	// JWT token
-	Token *string
-	// Chat room ID
+// JoinRoomPayload is the payload type of the chat service join-room method.
+type JoinRoomPayload struct {
+	// The access token
+	Token string
+	// Invite key
+	InviteKey string
+}
+
+// RoomListPayload is the payload type of the chat service room-list method.
+type RoomListPayload struct {
+	// The access token
+	Token string
+}
+
+// StreamRoomPayload is the payload type of the chat service stream-room method.
+type StreamRoomPayload struct {
+	// The access token
+	Token string
+	// The room id
 	RoomID string
-	// Message content
-	Message string
-	// Message type (text, image, file)
-	MessageType *string
 }
 
-// SendMessageResult is the result type of the chat service send_message method.
-type SendMessageResult struct {
-	// Message ID
-	MessageID string
-	// Message timestamp
-	Timestamp string
-}
+type Internal string
 
-// Invalid request
-type BadRequest string
+type InvalidArgument string
 
-// Internal server error
-type InternalError string
+type Notfound string
 
-// Room not found
-type NotFound string
+type PermissionDenied string
 
-// Unauthorized access
 type Unauthorized string
 
 // Error returns an error description.
-func (e BadRequest) Error() string {
-	return "Invalid request"
+func (e Internal) Error() string {
+	return ""
 }
 
-// ErrorName returns "bad_request".
+// ErrorName returns "internal".
 //
 // Deprecated: Use GoaErrorName - https://github.com/goadesign/goa/issues/3105
-func (e BadRequest) ErrorName() string {
+func (e Internal) ErrorName() string {
 	return e.GoaErrorName()
 }
 
-// GoaErrorName returns "bad_request".
-func (e BadRequest) GoaErrorName() string {
-	return "bad_request"
+// GoaErrorName returns "internal".
+func (e Internal) GoaErrorName() string {
+	return "internal"
 }
 
 // Error returns an error description.
-func (e InternalError) Error() string {
-	return "Internal server error"
+func (e InvalidArgument) Error() string {
+	return ""
 }
 
-// ErrorName returns "internal_error".
+// ErrorName returns "invalid_argument".
 //
 // Deprecated: Use GoaErrorName - https://github.com/goadesign/goa/issues/3105
-func (e InternalError) ErrorName() string {
+func (e InvalidArgument) ErrorName() string {
 	return e.GoaErrorName()
 }
 
-// GoaErrorName returns "internal_error".
-func (e InternalError) GoaErrorName() string {
-	return "internal_error"
+// GoaErrorName returns "invalid_argument".
+func (e InvalidArgument) GoaErrorName() string {
+	return "invalid_argument"
 }
 
 // Error returns an error description.
-func (e NotFound) Error() string {
-	return "Room not found"
+func (e Notfound) Error() string {
+	return ""
 }
 
-// ErrorName returns "not_found".
+// ErrorName returns "notfound".
 //
 // Deprecated: Use GoaErrorName - https://github.com/goadesign/goa/issues/3105
-func (e NotFound) ErrorName() string {
+func (e Notfound) ErrorName() string {
 	return e.GoaErrorName()
 }
 
-// GoaErrorName returns "not_found".
-func (e NotFound) GoaErrorName() string {
-	return "not_found"
+// GoaErrorName returns "notfound".
+func (e Notfound) GoaErrorName() string {
+	return "notfound"
+}
+
+// Error returns an error description.
+func (e PermissionDenied) Error() string {
+	return ""
+}
+
+// ErrorName returns "permission-denied".
+//
+// Deprecated: Use GoaErrorName - https://github.com/goadesign/goa/issues/3105
+func (e PermissionDenied) ErrorName() string {
+	return e.GoaErrorName()
+}
+
+// GoaErrorName returns "permission-denied".
+func (e PermissionDenied) GoaErrorName() string {
+	return "permission-denied"
 }
 
 // Error returns an error description.
 func (e Unauthorized) Error() string {
-	return "Unauthorized access"
+	return ""
 }
 
 // ErrorName returns "unauthorized".

@@ -15,62 +15,114 @@ import (
 
 // Client is the "chat" service client.
 type Client struct {
-	SendMessageEndpoint    goa.Endpoint
-	JoinChatEndpoint       goa.Endpoint
-	GetChatHistoryEndpoint goa.Endpoint
+	CreateRoomEndpoint goa.Endpoint
+	HistoryEndpoint    goa.Endpoint
+	RoomListEndpoint   goa.Endpoint
+	JoinRoomEndpoint   goa.Endpoint
+	InviteRoomEndpoint goa.Endpoint
+	StreamRoomEndpoint goa.Endpoint
 }
 
 // NewClient initializes a "chat" service client given the endpoints.
-func NewClient(sendMessage, joinChat, getChatHistory goa.Endpoint) *Client {
+func NewClient(createRoom, history, roomList, joinRoom, inviteRoom, streamRoom goa.Endpoint) *Client {
 	return &Client{
-		SendMessageEndpoint:    sendMessage,
-		JoinChatEndpoint:       joinChat,
-		GetChatHistoryEndpoint: getChatHistory,
+		CreateRoomEndpoint: createRoom,
+		HistoryEndpoint:    history,
+		RoomListEndpoint:   roomList,
+		JoinRoomEndpoint:   joinRoom,
+		InviteRoomEndpoint: inviteRoom,
+		StreamRoomEndpoint: streamRoom,
 	}
 }
 
-// SendMessage calls the "send_message" endpoint of the "chat" service.
-// SendMessage may return the following errors:
+// CreateRoom calls the "create-room" endpoint of the "chat" service.
+// CreateRoom may return the following errors:
 //   - "unauthorized" (type Unauthorized)
-//   - "bad_request" (type BadRequest)
-//   - "internal_error" (type InternalError)
+//   - "permission-denied" (type PermissionDenied)
+//   - "internal" (type Internal)
 //   - error: internal error
-func (c *Client) SendMessage(ctx context.Context, p *SendMessagePayload) (res *SendMessageResult, err error) {
+func (c *Client) CreateRoom(ctx context.Context, p *CreateRoomPayload) (res string, err error) {
 	var ires any
-	ires, err = c.SendMessageEndpoint(ctx, p)
+	ires, err = c.CreateRoomEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*SendMessageResult), nil
+	return ires.(string), nil
 }
 
-// JoinChat calls the "join_chat" endpoint of the "chat" service.
-// JoinChat may return the following errors:
+// History calls the "history" endpoint of the "chat" service.
+// History may return the following errors:
 //   - "unauthorized" (type Unauthorized)
-//   - "bad_request" (type BadRequest)
-//   - "internal_error" (type InternalError)
+//   - "permission-denied" (type PermissionDenied)
+//   - "internal" (type Internal)
 //   - error: internal error
-func (c *Client) JoinChat(ctx context.Context, p *JoinChatPayload) (res JoinChatClientStream, err error) {
+func (c *Client) History(ctx context.Context, p *HistoryPayload) (res []*Chat, err error) {
 	var ires any
-	ires, err = c.JoinChatEndpoint(ctx, p)
+	ires, err = c.HistoryEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(JoinChatClientStream), nil
+	return ires.([]*Chat), nil
 }
 
-// GetChatHistory calls the "get_chat_history" endpoint of the "chat" service.
-// GetChatHistory may return the following errors:
+// RoomList calls the "room-list" endpoint of the "chat" service.
+// RoomList may return the following errors:
 //   - "unauthorized" (type Unauthorized)
-//   - "bad_request" (type BadRequest)
-//   - "not_found" (type NotFound)
-//   - "internal_error" (type InternalError)
+//   - "permission-denied" (type PermissionDenied)
+//   - "internal" (type Internal)
 //   - error: internal error
-func (c *Client) GetChatHistory(ctx context.Context, p *GetChatHistoryPayload) (res *GetChatHistoryResult, err error) {
+func (c *Client) RoomList(ctx context.Context, p *RoomListPayload) (res []string, err error) {
 	var ires any
-	ires, err = c.GetChatHistoryEndpoint(ctx, p)
+	ires, err = c.RoomListEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*GetChatHistoryResult), nil
+	return ires.([]string), nil
+}
+
+// JoinRoom calls the "join-room" endpoint of the "chat" service.
+// JoinRoom may return the following errors:
+//   - "notfound" (type Notfound)
+//   - "unauthorized" (type Unauthorized)
+//   - "permission-denied" (type PermissionDenied)
+//   - "internal" (type Internal)
+//   - error: internal error
+func (c *Client) JoinRoom(ctx context.Context, p *JoinRoomPayload) (res string, err error) {
+	var ires any
+	ires, err = c.JoinRoomEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(string), nil
+}
+
+// InviteRoom calls the "invite-room" endpoint of the "chat" service.
+// InviteRoom may return the following errors:
+//   - "invalid_argument" (type InvalidArgument)
+//   - "unauthorized" (type Unauthorized)
+//   - "permission-denied" (type PermissionDenied)
+//   - "internal" (type Internal)
+//   - error: internal error
+func (c *Client) InviteRoom(ctx context.Context, p *InviteRoomPayload) (res string, err error) {
+	var ires any
+	ires, err = c.InviteRoomEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(string), nil
+}
+
+// StreamRoom calls the "stream-room" endpoint of the "chat" service.
+// StreamRoom may return the following errors:
+//   - "unauthorized" (type Unauthorized)
+//   - "permission-denied" (type PermissionDenied)
+//   - "internal" (type Internal)
+//   - error: internal error
+func (c *Client) StreamRoom(ctx context.Context, p *StreamRoomPayload) (res StreamRoomClientStream, err error) {
+	var ires any
+	ires, err = c.StreamRoomEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(StreamRoomClientStream), nil
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"object-t.com/hackz-giganoto/pkg/telemetry"
 	"sync"
 
 	"goa.design/clue/debug"
@@ -39,7 +40,10 @@ func handleGRPCServer(ctx context.Context, u *url.URL, wikiEndpoints *wiki.Endpo
 	}
 
 	// Initialize gRPC server
-	srv := grpc.NewServer(chain)
+	srv := grpc.NewServer(
+		chain,
+		telemetry.GRPCServerInterceptor(),
+	)
 
 	// Register the servers.
 	wikipb.RegisterWikiServer(srv, wikiServer)

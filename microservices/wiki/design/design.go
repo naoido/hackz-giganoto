@@ -22,7 +22,6 @@ var _ = API("wiki", func() {
 	})
 })
 
-// Wikiサービスのデザイン
 var _ = Service("wiki", func() {
 	Description("Wikiサービス")
 
@@ -35,7 +34,6 @@ var _ = Service("wiki", func() {
 		Scope("api:write")
 	})
 
-	// 指定されたチャンネルIDに紐づくWikiを取得
 	Method("show", func() {
 		Description("Wiki取得")
 
@@ -63,7 +61,6 @@ var _ = Service("wiki", func() {
 		})
 	})
 
-	// Wiki作成
 	Method("create", func() {
 		Description("新しいWikiを作成")
 
@@ -92,7 +89,6 @@ var _ = Service("wiki", func() {
 		})
 	})
 
-	// Wiki更新
 	Method("update", func() {
 		Description("指定されたIDのWikiの内容を更新")
 
@@ -123,7 +119,6 @@ var _ = Service("wiki", func() {
 		})
 	})
 
-	// Wiki削除
 	Method("delete", func() {
 		Description("指定されたIDのWikiを削除")
 
@@ -152,7 +147,6 @@ var _ = Service("wiki", func() {
 	})
 })
 
-// Wikiデータ構造
 var Wiki = ResultType("application/vnd.wiki", func() {
 	Description("チャンネルWikiを表します。")
 	Attributes(func() {

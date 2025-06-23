@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-config
+  namespace: hackz-giganoto
+data:
+  otel-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch:
+        timeout: 1s
+        send_batch_size: 1024
+      memory_limiter:
+        limit_mib: 512
+        check_interval: 1s
+      resource:
+        attributes:
+          - key: deployment.environment
+            value: kubernetes
+            action: upsert
+
+    exporters:
+      otlp/jaeger:
+        endpoint: jaeger-service:4317
+        tls:
+          insecure: true
+
+      debug:
+        verbosity: detailed
+        sampling_initial: 10
+        sampling_thereafter: 100
+
+      otlphttp/logs:
+        endpoint: "http://loki-service:3100/otlp"
+        tls:
+          insecure: true
+
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+      pprof:
+        endpoint: 0.0.0.0:1777
+      zpages:
+        endpoint: 0.0.0.0:55679
+
+    service:
+      extensions: [health_check, pprof, zpages]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, resource, batch]
+          exporters: [otlp/jaeger, debug]
+        logs:
+          receivers: [ otlp ]
+          processors: [ batch ]
+          exporters: [ otlphttp/logs ]
+
+      telemetry:
+        logs:
+          level: "info"

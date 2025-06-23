@@ -15,55 +15,37 @@ import (
 	chatpb "object-t.com/hackz-giganoto/microservices/chat/gen/grpc/chat/pb"
 )
 
-// BuildSendMessagePayload builds the payload for the chat send_message
-// endpoint from CLI flags.
-func BuildSendMessagePayload(chatSendMessageMessage string, chatSendMessageToken string) (*chat.SendMessagePayload, error) {
-	var err error
-	var message chatpb.SendMessageRequest
+// BuildCreateRoomPayload builds the payload for the chat create-room endpoint
+// from CLI flags.
+func BuildCreateRoomPayload(chatCreateRoomToken string) (*chat.CreateRoomPayload, error) {
+	var token string
 	{
-		if chatSendMessageMessage != "" {
-			err = json.Unmarshal([]byte(chatSendMessageMessage), &message)
-			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"message\": \"Repellendus iure ratione.\",\n      \"message_type\": \"Est consectetur et fugit est tenetur.\",\n      \"room_id\": \"Commodi aut voluptatem.\"\n   }'")
-			}
-		}
+		token = chatCreateRoomToken
 	}
-	var token *string
-	{
-		if chatSendMessageToken != "" {
-			token = &chatSendMessageToken
-		}
-	}
-	v := &chat.SendMessagePayload{
-		RoomID:      message.RoomId,
-		Message:     message.Message_,
-		MessageType: message.MessageType,
-	}
+	v := &chat.CreateRoomPayload{}
 	v.Token = token
 
 	return v, nil
 }
 
-// BuildJoinChatPayload builds the payload for the chat join_chat endpoint from
+// BuildHistoryPayload builds the payload for the chat history endpoint from
 // CLI flags.
-func BuildJoinChatPayload(chatJoinChatMessage string, chatJoinChatToken string) (*chat.JoinChatPayload, error) {
+func BuildHistoryPayload(chatHistoryMessage string, chatHistoryToken string) (*chat.HistoryPayload, error) {
 	var err error
-	var message chatpb.JoinChatRequest
+	var message chatpb.HistoryRequest
 	{
-		if chatJoinChatMessage != "" {
-			err = json.Unmarshal([]byte(chatJoinChatMessage), &message)
+		if chatHistoryMessage != "" {
+			err = json.Unmarshal([]byte(chatHistoryMessage), &message)
 			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"room_id\": \"Ut repellat id voluptas dolore.\"\n   }'")
+				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"room_id\": \"Rerum sapiente reiciendis nobis et voluptatem.\"\n   }'")
 			}
 		}
 	}
-	var token *string
+	var token string
 	{
-		if chatJoinChatToken != "" {
-			token = &chatJoinChatToken
-		}
+		token = chatHistoryToken
 	}
-	v := &chat.JoinChatPayload{
+	v := &chat.HistoryPayload{
 		RoomID: message.RoomId,
 	}
 	v.Token = token
@@ -71,37 +53,84 @@ func BuildJoinChatPayload(chatJoinChatMessage string, chatJoinChatToken string) 
 	return v, nil
 }
 
-// BuildGetChatHistoryPayload builds the payload for the chat get_chat_history
-// endpoint from CLI flags.
-func BuildGetChatHistoryPayload(chatGetChatHistoryMessage string, chatGetChatHistoryToken string) (*chat.GetChatHistoryPayload, error) {
-	var err error
-	var message chatpb.GetChatHistoryRequest
+// BuildRoomListPayload builds the payload for the chat room-list endpoint from
+// CLI flags.
+func BuildRoomListPayload(chatRoomListToken string) (*chat.RoomListPayload, error) {
+	var token string
 	{
-		if chatGetChatHistoryMessage != "" {
-			err = json.Unmarshal([]byte(chatGetChatHistoryMessage), &message)
+		token = chatRoomListToken
+	}
+	v := &chat.RoomListPayload{}
+	v.Token = token
+
+	return v, nil
+}
+
+// BuildJoinRoomPayload builds the payload for the chat join-room endpoint from
+// CLI flags.
+func BuildJoinRoomPayload(chatJoinRoomMessage string, chatJoinRoomToken string) (*chat.JoinRoomPayload, error) {
+	var err error
+	var message chatpb.JoinRoomRequest
+	{
+		if chatJoinRoomMessage != "" {
+			err = json.Unmarshal([]byte(chatJoinRoomMessage), &message)
 			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"limit\": 5822586653971467938,\n      \"offset\": 8299041473847685240,\n      \"room_id\": \"Et voluptatem dolores sequi rerum laudantium est.\"\n   }'")
+				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"invite_key\": \"Enim voluptas.\"\n   }'")
 			}
 		}
 	}
-	var token *string
+	var token string
 	{
-		if chatGetChatHistoryToken != "" {
-			token = &chatGetChatHistoryToken
-		}
+		token = chatJoinRoomToken
 	}
-	v := &chat.GetChatHistoryPayload{
-		RoomID: message.RoomId,
-	}
-	if message.Limit != nil {
-		limit := int(*message.Limit)
-		v.Limit = &limit
-	}
-	if message.Offset != nil {
-		offset := int(*message.Offset)
-		v.Offset = &offset
+	v := &chat.JoinRoomPayload{
+		InviteKey: message.InviteKey,
 	}
 	v.Token = token
+
+	return v, nil
+}
+
+// BuildInviteRoomPayload builds the payload for the chat invite-room endpoint
+// from CLI flags.
+func BuildInviteRoomPayload(chatInviteRoomMessage string, chatInviteRoomToken string) (*chat.InviteRoomPayload, error) {
+	var err error
+	var message chatpb.InviteRoomRequest
+	{
+		if chatInviteRoomMessage != "" {
+			err = json.Unmarshal([]byte(chatInviteRoomMessage), &message)
+			if err != nil {
+				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"room_id\": \"Sed ipsam.\",\n      \"user_id\": \"Culpa laudantium qui esse non dolorem et.\"\n   }'")
+			}
+		}
+	}
+	var token string
+	{
+		token = chatInviteRoomToken
+	}
+	v := &chat.InviteRoomPayload{
+		RoomID: message.RoomId,
+		UserID: message.UserId,
+	}
+	v.Token = token
+
+	return v, nil
+}
+
+// BuildStreamRoomPayload builds the payload for the chat stream-room endpoint
+// from CLI flags.
+func BuildStreamRoomPayload(chatStreamRoomToken string, chatStreamRoomRoomID string) (*chat.StreamRoomPayload, error) {
+	var token string
+	{
+		token = chatStreamRoomToken
+	}
+	var roomID string
+	{
+		roomID = chatStreamRoomRoomID
+	}
+	v := &chat.StreamRoomPayload{}
+	v.Token = token
+	v.RoomID = roomID
 
 	return v, nil
 }

@@ -24,6 +24,12 @@ type IntrospectRequestBody struct {
 type IntrospectResponseBody struct {
 	// Internal JWT token for downstream services
 	JWT *string `form:"jwt,omitempty" json:"jwt,omitempty" xml:"jwt,omitempty"`
+	// Whether the token is active
+	Active *bool `form:"active,omitempty" json:"active,omitempty" xml:"active,omitempty"`
+	// Token expiration timestamp
+	Exp *int64 `form:"exp,omitempty" json:"exp,omitempty" xml:"exp,omitempty"`
+	// Token scopes
+	Scopes []string `form:"scopes,omitempty" json:"scopes,omitempty" xml:"scopes,omitempty"`
 }
 
 // AuthURLResponseBody is the type of the "auth" service "auth_url" endpoint
@@ -46,8 +52,6 @@ type OauthCallbackResponseBody struct {
 	ExpiresIn *int64 `form:"expires_in,omitempty" json:"expires_in,omitempty" xml:"expires_in,omitempty"`
 	// GitHub user ID
 	UserID *string `form:"user_id,omitempty" json:"user_id,omitempty" xml:"user_id,omitempty"`
-	// GitHub user name
-	UserName *string `form:"userName,omitempty" json:"userName,omitempty" xml:"userName,omitempty"`
 }
 
 // NewIntrospectRequestBody builds the HTTP request body from the payload of
@@ -63,7 +67,15 @@ func NewIntrospectRequestBody(p *auth.IntrospectPayload) *IntrospectRequestBody 
 // from a HTTP "OK" response.
 func NewIntrospectResultOK(body *IntrospectResponseBody) *auth.IntrospectResult {
 	v := &auth.IntrospectResult{
-		JWT: *body.JWT,
+		JWT:    *body.JWT,
+		Active: *body.Active,
+		Exp:    body.Exp,
+	}
+	if body.Scopes != nil {
+		v.Scopes = make([]string, len(body.Scopes))
+		for i, val := range body.Scopes {
+			v.Scopes[i] = val
+		}
 	}
 
 	return v
@@ -112,7 +124,6 @@ func NewOauthCallbackResultOK(body *OauthCallbackResponseBody) *auth.OauthCallba
 		TokenType:   *body.TokenType,
 		ExpiresIn:   *body.ExpiresIn,
 		UserID:      *body.UserID,
-		UserName:    body.UserName,
 	}
 
 	return v
@@ -155,6 +166,9 @@ func NewOauthCallbackInvalidState(body string) auth.InvalidState {
 func ValidateIntrospectResponseBody(body *IntrospectResponseBody) (err error) {
 	if body.JWT == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("jwt", "body"))
+	}
+	if body.Active == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("active", "body"))
 	}
 	return
 }

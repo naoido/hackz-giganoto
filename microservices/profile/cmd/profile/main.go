@@ -4,16 +4,18 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/redis/go-redis/v9"
 	"net"
 	"net/url"
+	"object-t.com/hackz-giganoto/pkg/telemetry"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 
 	"goa.design/clue/debug"
 	"goa.design/clue/log"
-	"object-t.com/hackz-giganoto/db"
 	profileapi "object-t.com/hackz-giganoto/microservices/profile"
 	profile "object-t.com/hackz-giganoto/microservices/profile/gen/profile"
 )
@@ -30,6 +32,28 @@ func main() {
 	)
 	flag.Parse()
 
+	// Initialize OpenTelemetry
+	config := telemetry.DefaultConfig("profile-service")
+	if endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"); endpoint != "" {
+		// Remove http:// prefix if present for gRPC connection
+		if strings.HasPrefix(endpoint, "http://") {
+			endpoint = strings.TrimPrefix(endpoint, "http://")
+		}
+		config.CollectorAddr = endpoint
+	}
+	if serviceName := os.Getenv("OTEL_SERVICE_NAME"); serviceName != "" {
+		config.ServiceName = serviceName
+	}
+	if serviceVersion := os.Getenv("OTEL_SERVICE_VERSION"); serviceVersion != "" {
+		config.ServiceVersion = serviceVersion
+	}
+
+	_, cleanup, err := telemetry.Init(context.Background(), config)
+	if err != nil {
+		log.Fatalf(context.Background(), err, "failed to initialize OpenTelemetry")
+	}
+	defer cleanup()
+
 	// Setup logger. Replace logger with your own log package of choice.
 	format := log.FormatJSON
 	if log.IsTerminal() {
@@ -41,19 +65,21 @@ func main() {
 		log.Debugf(ctx, "debug logs enabled")
 	}
 
-	// Initialize the database
-	db, err := db.InitDB()
-	if err != nil {
-		log.Fatalf(ctx, err, "failed to initialize database")
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
 	}
-	log.Infof(ctx, "database connection established")
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: redisAddr,
+	})
 
 	// Initialize the services.
 	var (
 		profileSvc profile.Service
 	)
 	{
-		profileSvc = profileapi.NewProfile(db)
+		profileSvc = profileapi.NewProfile(redisClient)
 	}
 
 	// Wrap the services in endpoints that can be invoked from other services
@@ -104,7 +130,7 @@ func main() {
 				}
 				u.Host = net.JoinHostPort(h, *grpcPortF)
 			} else if u.Port() == "" {
-				u.Host = net.JoinHostPort(u.Host, "8080")
+				u.Host = net.JoinHostPort(u.Host, "50052")
 			}
 			handleGRPCServer(ctx, u, profileEndpoints, &wg, errc, *dbgF)
 		}

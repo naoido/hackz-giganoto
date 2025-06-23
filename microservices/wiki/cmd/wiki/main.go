@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"object-t.com/hackz-giganoto/pkg/telemetry"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -28,6 +30,28 @@ func main() {
 		dbgF      = flag.Bool("debug", false, "Log request and response bodies")
 	)
 	flag.Parse()
+
+	// Initialize OpenTelemetry
+	config := telemetry.DefaultConfig("wiki-service")
+	if endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"); endpoint != "" {
+		// Remove http:// prefix if present for gRPC connection
+		if strings.HasPrefix(endpoint, "http://") {
+			endpoint = strings.TrimPrefix(endpoint, "http://")
+		}
+		config.CollectorAddr = endpoint
+	}
+	if serviceName := os.Getenv("OTEL_SERVICE_NAME"); serviceName != "" {
+		config.ServiceName = serviceName
+	}
+	if serviceVersion := os.Getenv("OTEL_SERVICE_VERSION"); serviceVersion != "" {
+		config.ServiceVersion = serviceVersion
+	}
+
+	_, cleanup, err := telemetry.Init(context.Background(), config)
+	if err != nil {
+		log.Fatalf(context.Background(), err, "failed to initialize OpenTelemetry")
+	}
+	defer cleanup()
 
 	// Setup logger. Replace logger with your own log package of choice.
 	format := log.FormatJSON

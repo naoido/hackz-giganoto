@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong-deployment
+  namespace: hackz-giganoto
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kong
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: kong
+        version: v1
+    spec:
+      containers:
+      - name: kong
+        image: kong:latest
+        ports:
+        - containerPort: 8000
+          name: proxy
+        - containerPort: 8001
+          name: admin
+        - containerPort: 8002
+          name: manager
+        env:
+        - name: KONG_DATABASE
+          value: "off"
+        - name: KONG_DECLARATIVE_CONFIG
+          value: "/etc/kong/kong.yaml"
+        - name: KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES
+          value: "resty.http,cjson.safe"
+        - name: KONG_PLUGINS
+          value: "bundled,token-transformer,opentelemetry"
+        - name: KONG_TRACING_INSTRUMENTATIONS
+          value: "all"
+        - name: KONG_TRACING_SAMPLING_RATE
+          value: "1.0"
+        - name: KONG_LOG_LEVEL
+          value: "info"
+        - name: KONG_PROXY_ACCESS_LOG
+          value: "/dev/stdout"
+        - name: KONG_ADMIN_ACCESS_LOG
+          value: "/dev/stdout"
+        - name: KONG_PROXY_ERROR_LOG
+          value: "/dev/stderr"
+        - name: KONG_ADMIN_ERROR_LOG
+          value: "/dev/stderr"
+        volumeMounts:
+        - name: kong-config
+          mountPath: /etc/kong/kong.yaml
+          subPath: kong.yaml
+          readOnly: true
+        - name: kong-plugins
+          mountPath: /usr/local/custom_plugins/kong/plugins
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /status
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /status
+            port: 8001
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: kong-config
+        configMap:
+          name: kong-config
+      - name: kong-plugins
+        configMap:
+          name: kong-plugins

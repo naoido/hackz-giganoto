@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: hackz-giganoto
+
+resources:
+  - namespace.yaml
+  
+  # ConfigMaps
+  - configmaps/kong-config.yaml
+  - configmaps/otel-config.yaml
+  - configmaps/loki-config.yaml
+  - configmaps/grafana-config.yaml
+  
+  # Services
+  - services/kong/
+  - services/auth/
+  - services/chat/
+  - services/bff/
+  - services/otel-collector/
+  - services/jaeger/
+  - services/loki/
+  - services/grafana/
+  
+  # Secrets (from separate directory)
+  - ../secrets/
+
+commonLabels:
+  app.kubernetes.io/name: hackz-giganoto
+  app.kubernetes.io/managed-by: argocd
+
+images:
+  - name: ghcr.io/naoido/hackz-giganoto-auth
+    newTag: latest
+  - name: ghcr.io/naoido/hackz-giganoto-chat
+    newTag: latest
+  - name: ghcr.io/naoido/hackz-giganoto-bff
+    newTag: latest

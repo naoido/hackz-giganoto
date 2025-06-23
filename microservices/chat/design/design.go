@@ -8,251 +8,172 @@ var JWTAuth = JWTSecurity("jwt", func() {
 	Scope("api:write", "Write access to API resources")
 })
 
-var ChatMessage = Type("ChatMessage", func() {
+var Chat = Type("Chat", func() {
 	Description("Chat message")
-	Field(1, "message_id", String, "Message ID")
-	Field(2, "user_id", String, "Sender user ID")
-	Field(3, "user_name", String, "Sender user name")
-	Field(4, "message", String, "Message content")
-	Field(5, "message_type", String, "Message type")
-	Field(6, "timestamp", String, "Message timestamp")
-	Required("message_id", "user_id", "user_name", "message", "timestamp")
+
+	Field(1, "user_id", String, "user_id")
+	Field(2, "message", String, "Message content")
+	Field(3, "id", String, "ID")
+	Field(4, "created_at", Int64, "Created timestamp")
+	Field(5, "updated_at", Int64, "Updated timestamp")
+	Field(6, "room_id", String, "room")
+	Required("user_id", "message", "id", "created_at", "updated_at", "room_id")
 })
 
-var _ = API("profile", func() {
-	Title("Profile Service")
-	Description("User profile management service")
+var _ = API("chat", func() {
+	Title("Chat Service")
+	Description("Real-time chat service")
 	Version("1.0")
 
-	Server("profile", func() {
+	Server("chat", func() {
 		Host("localhost", func() {
-			URI("grpc://localhost:50052")
-		})
-	})
-})
-
-var _ = Service("profile", func() {
-	Description("User profile management service")
-
-	GRPC(func() {
-		Package("profile.v1")
-	})
-
-	Security(JWTAuth, func() {
-		Scope("api:read")
-		Scope("api:write")
-	})
-
-	Method("get_profile", func() {
-		Description("Get user profile")
-
-		Security(JWTAuth, func() {
-			Scope("api:read")
-		})
-
-		Payload(func() {
-			Token("token", String, "JWT token")
-		})
-
-		Result(func() {
-			Field(1, "user_id", String, "User ID")
-			Field(2, "name", String, "User name")
-			Field(3, "created_at", String, "Creation timestamp")
-			Field(4, "updated_at", String, "Last update timestamp")
-			Required("user_id", "name")
-		})
-
-		Error("unauthorized", String, "Unauthorized access")
-		Error("not_found", String, "Profile not found")
-		Error("internal_error", String, "Internal server error")
-
-		GRPC(func() {
-			Response(CodeOK)
-			Response("unauthorized", CodeUnauthenticated)
-			Response("not_found", CodeNotFound)
-			Response("internal_error", CodeInternal)
-		})
-	})
-
-	Method("update_profile", func() {
-		Description("Update user profile")
-
-		Security(JWTAuth, func() {
-			Scope("api:write")
-		})
-
-		Payload(func() {
-			Token("token", String, "JWT token")
-			Field(1, "name", String, "User name")
-			Required("name")
-		})
-
-		Result(func() {
-			Field(1, "user_id", String, "User ID")
-			Field(2, "name", String, "User name")
-			Field(3, "created_at", String, "Creation timestamp")
-			Field(4, "updated_at", String, "Last update timestamp")
-			Required("user_id", "name")
-		})
-
-		Error("unauthorized", String, "Unauthorized access")
-		Error("bad_request", String, "Invalid request")
-		Error("internal_error", String, "Internal server error")
-
-		GRPC(func() {
-			Response(CodeOK)
-			Response("unauthorized", CodeUnauthenticated)
-			Response("bad_request", CodeInvalidArgument)
-			Response("internal_error", CodeInternal)
-		})
-	})
-
-	Method("get_profile_by_id", func() {
-		Description("Get profile by user ID (for internal service communication)")
-
-		Security(JWTAuth, func() {
-			Scope("api:read")
-		})
-
-		Payload(func() {
-			Token("token", String, "JWT token")
-			Field(1, "user_id", String, "User ID to lookup")
-			Required("user_id")
-		})
-
-		Result(func() {
-			Field(1, "user_id", String, "User ID")
-			Field(2, "name", String, "User name")
-			Field(3, "creation_timestamp", String, "Creation timestamp")
-			Field(4, "updated_at", String, "Last update timestamp")
-			Required("user_id", "name")
-		})
-
-		Error("unauthorized", String, "Unauthorized access")
-		Error("not_found", String, "Profile not found")
-		Error("internal_error", String, "Internal server error")
-
-		GRPC(func() {
-			Response(CodeOK)
-			Response("unauthorized", CodeUnauthenticated)
-			Response("not_found", CodeNotFound)
-			Response("internal_error", CodeInternal)
+			URI("grpc://localhost:50053")
 		})
 	})
 })
 
 var _ = Service("chat", func() {
-	Description("Bidirectional chat service")
+	Description("Real-time chat service with bidirectional streaming")
 
 	GRPC(func() {
 		Package("chat.v1")
 	})
 
-	Security(JWTAuth, func() {
-		Scope("api:read")
-		Scope("api:write")
-	})
+	Error("unauthorized", String)
+	Error("permission-denied", String)
+	Error("internal", String)
 
-	Method("send_message", func() {
-		Description("Send a message to a chat room")
+	Method("create-room", func() {
+		Description("Creates a new chat room")
 
 		Security(JWTAuth, func() {
 			Scope("api:write")
 		})
 
 		Payload(func() {
-			Token("token", String, "JWT token")
-			Field(1, "room_id", String, "Chat room ID")
-			Field(2, "message", String, "Message content")
-			Field(3, "message_type", String, "Message type (text, image, file)")
-			Required("room_id", "message")
+			Token("token", String, "The access token")
+			Required("token")
 		})
 
-		Result(func() {
-			Field(1, "message_id", String, "Message ID")
-			Field(2, "timestamp", String, "Message timestamp")
-			Required("message_id", "timestamp")
-		})
-
-		Error("unauthorized", String, "Unauthorized access")
-		Error("bad_request", String, "Invalid request")
-		Error("internal_error", String, "Internal server error")
+		Result(String)
 
 		GRPC(func() {
 			Response(CodeOK)
-			Response("unauthorized", CodeUnauthenticated)
-			Response("bad_request", CodeInvalidArgument)
-			Response("internal_error", CodeInternal)
+			Response("internal", CodeInvalidArgument)
 		})
 	})
 
-	Method("join_chat", func() {
-		Description("Join a chat room and receive messages")
+	Method("history", func() {
+		Description("Get all chat rooms history")
 
 		Security(JWTAuth, func() {
 			Scope("api:read")
 		})
 
 		Payload(func() {
-			Token("token", String, "JWT token")
-			Field(1, "room_id", String, "Chat room ID")
-			Required("room_id")
+			Token("token", String, "The access token")
+			Field(1, "room_id", String, "The id of the room")
+			Required("token", "room_id")
 		})
 
-		StreamingResult(func() {
-			Field(1, "message_id", String, "Message ID")
-			Field(2, "user_id", String, "Sender user ID")
-			Field(3, "user_name", String, "Sender user name")
-			Field(4, "message", String, "Message content")
-			Field(5, "message_type", String, "Message type")
-			Field(6, "timestamp", String, "Message timestamp")
-			Required("message_id", "user_id", "user_name", "message", "timestamp")
-		})
-
-		Error("unauthorized", String, "Unauthorized access")
-		Error("bad_request", String, "Invalid request")
-		Error("internal_error", String, "Internal server error")
+		Result(ArrayOf(Chat))
 
 		GRPC(func() {
 			Response(CodeOK)
-			Response("unauthorized", CodeUnauthenticated)
-			Response("bad_request", CodeInvalidArgument)
-			Response("internal_error", CodeInternal)
+			Response("unauthorized", CodeInvalidArgument)
+			Response("permission-denied", CodePermissionDenied)
 		})
 	})
 
-	Method("get_chat_history", func() {
-		Description("Get chat history for a room")
+	Method("room-list", func() {
+		Description("Get all chat rooms history")
+		Security(JWTAuth, func() {
+			Scope("api:read")
+		})
+
+		Payload(func() {
+			Token("token", String, "The access token")
+			Required("token")
+		})
+
+		Result(ArrayOf(String))
+
+		Error("unauthorized", String)
+
+		GRPC(func() {
+			Response(CodeOK)
+			Response("unauthorized", CodeInvalidArgument)
+		})
+	})
+
+	Method("join-room", func() {
+		Description("Creates a new chat room")
 
 		Security(JWTAuth, func() {
 			Scope("api:read")
 		})
 
 		Payload(func() {
-			Token("token", String, "JWT token")
-			Field(1, "room_id", String, "Chat room ID")
-			Field(2, "limit", Int, "Number of messages to retrieve")
-			Field(3, "offset", Int, "Offset for pagination")
-			Required("room_id")
+			Token("token", String, "The access token")
+			Field(1, "invite_key", String, "Invite key")
+			Required("token", "invite_key")
 		})
 
-		Result(func() {
-			Field(1, "messages", ArrayOf("ChatMessage"), "Chat messages")
-			Field(2, "total_count", Int, "Total number of messages")
-			Required("messages", "total_count")
-		})
+		Result(String)
 
-		Error("unauthorized", String, "Unauthorized access")
-		Error("bad_request", String, "Invalid request")
-		Error("not_found", String, "Room not found")
-		Error("internal_error", String, "Internal server error")
+		Error("notfound", String)
 
 		GRPC(func() {
 			Response(CodeOK)
-			Response("unauthorized", CodeUnauthenticated)
-			Response("bad_request", CodeInvalidArgument)
-			Response("not_found", CodeNotFound)
-			Response("internal_error", CodeInternal)
+			Response("notfound", CodeNotFound)
+		})
+	})
+
+	Method("invite-room", func() {
+		Description("Creates a new chat room")
+
+		Security(JWTAuth, func() {
+			Scope("api:read")
+		})
+
+		Payload(func() {
+			Token("token", String, "The access token")
+			Field(1, "room_id", String, "The id of the room")
+			Field(2, "user_id", String, "The id of the user")
+
+			Required("token", "room_id", "user_id")
+		})
+
+		Result(String)
+
+		Error("invalid_argument", String)
+
+		GRPC(func() {
+			Response(CodeOK)
+			Response("invalid_argument", CodeInvalidArgument)
+		})
+	})
+
+	Method("stream-room", func() {
+		Description("Streams chat room events on a chat room")
+
+		Security(JWTAuth, func() {
+			Scope("api:read")
+		})
+
+		Payload(func() {
+			Token("token", String, "The access token")
+			Field(1, "room_id", String, "The room id")
+			Required("token", "room_id")
+		})
+
+		StreamingPayload(String)
+		StreamingResult(Chat)
+
+		GRPC(func() {
+			Response(CodeOK)
+			Response("unauthorized", CodeInvalidArgument)
+			Response("permission-denied", CodePermissionDenied)
 		})
 	})
 })

@@ -1,256 +1,255 @@
 package authapi
 
 import (
-	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"goa.design/clue/log"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
+	"sync"
 	"time"
-	"crypto/rand"
-	"strconv"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"goa.design/clue/log"
-	model "object-t.com/hackz-giganoto/microservices/model"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/github"
 	auth "object-t.com/hackz-giganoto/microservices/auth/gen/auth"
 )
 
-// auth service example implementation.
-// The example methods log the requests and return zero values.
+// GitHub user profile response
+type GitHubUser struct {
+	ID    int64  `json:"id"`
+	Login string `json:"login"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+// OAuth state entry
+type stateEntry struct {
+	CreatedAt time.Time
+	ExpiresAt time.Time
+}
+
+// Token storage entry
+type tokenEntry struct {
+	UserID    string
+	Login     string
+	CreatedAt time.Time
+	ExpiresAt time.Time
+}
+
+// auth service implementation with GitHub OAuth
 type authsrvc struct {
-	redis *redis.Client
+	oauthConfig *oauth2.Config
+	jwtSecret   []byte
+	states      map[string]stateEntry
+	tokens      map[string]tokenEntry
+	statesMutex sync.RWMutex
+	tokensMutex sync.RWMutex
 }
 
 // NewAuth returns the auth service implementation.
-func NewAuth(redis *redis.Client) auth.Service {
-	return &authsrvc{redis: redis}
+func NewAuth() auth.Service {
+	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
+	if len(jwtSecret) == 0 {
+		jwtSecret = []byte("secret") // Default for development
+	}
+
+	return &authsrvc{
+		oauthConfig: &oauth2.Config{
+			ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+			ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+			RedirectURL:  os.Getenv("GITHUB_REDIRECT_URL"),
+			Scopes:       []string{"read:user", "user:email"},
+			Endpoint:     github.Endpoint,
+		},
+		jwtSecret: jwtSecret,
+		states:    make(map[string]stateEntry),
+		tokens:    make(map[string]tokenEntry),
+	}
 }
 
-// Introspect opaque token and return internal JWT token for Kong Gateway
-func (s *authsrvc) Introspect(ctx context.Context, p *auth.IntrospectPayload) (res *auth.IntrospectResult, err error) {
-	res = &auth.IntrospectResult{}
-	log.Printf(ctx, "auth.introspect")
+// Generate random state for OAuth CSRF protection
+func (s *authsrvc) generateState() string {
+	bytes := make([]byte, 16)
+	rand.Read(bytes)
+	return hex.EncodeToString(bytes)
+}
 
-	userID, err := s.redis.Get(ctx, "token:"+p.Token).Result()
-	if err == redis.Nil {
-		log.Printf(ctx, "token not found: %s", p.Token)
-		return nil, auth.InvalidToken("token not found")
-	}
+// Clean expired states and tokens
+func (s *authsrvc) cleanExpired() {
+	now := time.Now()
 
-	claims := jwt.MapClaims{
-		"sub":   userID,
-		"scope": []string{"api:read", "api:write"},
-		"iat":   time.Now().Unix(),
-		"exp":   time.Now().Add(time.Minute).Unix(),
+	s.statesMutex.Lock()
+	for state, entry := range s.states {
+		if now.After(entry.ExpiresAt) {
+			delete(s.states, state)
+		}
 	}
-	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token, err := t.SignedString([]byte("secret"))
-	if err != nil {
-		return nil, auth.InternalError("failed to sign token")
-	}
+	s.statesMutex.Unlock()
 
-	res.JWT = token
-	return res, nil
+	s.tokensMutex.Lock()
+	for token, entry := range s.tokens {
+		if now.After(entry.ExpiresAt) {
+			delete(s.tokens, token)
+		}
+	}
+	s.tokensMutex.Unlock()
 }
 
 // Get GitHub OAuth authorization URL with state parameter
 func (s *authsrvc) AuthURL(ctx context.Context) (res *auth.AuthURLResult, err error) {
-	res = &auth.AuthURLResult{}
-	log.Printf(ctx, "auth.auth_url")
+	s.cleanExpired()
 
-	// Generate a random state string
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return nil, err
+	state := s.generateState()
+
+	// Store state with 10 minute expiration
+	s.statesMutex.Lock()
+	s.states[state] = stateEntry{
+		CreatedAt: time.Now(),
+		ExpiresAt: time.Now().Add(10 * time.Minute),
 	}
-	state := hex.EncodeToString(b)
-	log.Printf(ctx, "generated state: %s", state)
+	s.statesMutex.Unlock()
 
-	// Store the state in Redis with an expiration
-	err = s.redis.Set(ctx, "state:"+state, "true", 10*time.Minute).Err()
-	if err != nil {
-		return nil, err
+	authURL := s.oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
+
+	res = &auth.AuthURLResult{
+		AuthURL: authURL,
+		State:   state,
 	}
 
-	// Construct the GitHub OAuth URL
-	githubClientID := os.Getenv("GITHUB_CLIENT_ID")
-	redirectURI := os.Getenv("GITHUB_REDIRECT_URL")
-	authURL := "https://github.com/login/oauth/authorize?client_id=" + githubClientID +
-		"&redirect_uri=" + url.QueryEscape(redirectURI) +
-		"&state=" + state
-
-	res.AuthURL = authURL
-	res.State = state
-
+	log.Info(ctx, log.KV{"auth.auth_url", fmt.Sprintf("generated state:  %s", state)})
 	return
+}
+
+// Fetch GitHub user profile
+func (s *authsrvc) fetchGitHubUser(ctx context.Context, token *oauth2.Token) (*GitHubUser, error) {
+	client := s.oauthConfig.Client(ctx, token)
+	resp, err := client.Get("https://api.github.com/user")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user info: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("GitHub API error: %s", string(body))
+	}
+
+	var user GitHubUser
+	if err := json.Unmarshal(body, &user); err != nil {
+		return nil, fmt.Errorf("failed to parse user info: %w", err)
+	}
+
+	return &user, nil
 }
 
 // Handle GitHub OAuth callback and return opaque token
 func (s *authsrvc) OauthCallback(ctx context.Context, p *auth.OauthCallbackPayload) (res *auth.OauthCallbackResult, err error) {
-	res = &auth.OauthCallbackResult{}
-	log.Printf(ctx, "auth.oauth_callback, state: %s", p.State)
+	s.cleanExpired()
 
-	// 1. Validate state
-	stateKey := "state:" + p.State
-	log.Printf(ctx, "validating state: %s", stateKey)
- 
-	val, err := s.redis.Get(ctx, stateKey).Result()
-	if err == redis.Nil {
-		log.Printf(ctx, "invalid or expired state: %s", p.State)
-		return nil, auth.InvalidState("invalid or expired state")
+	// Validate state
+	s.statesMutex.RLock()
+	stateEntry, exists := s.states[p.State]
+	s.statesMutex.RUnlock()
+
+	if !exists || time.Now().After(stateEntry.ExpiresAt) {
+		log.Print(ctx, log.KV{"auth.oauth_callback", fmt.Sprintf("ERROR: invalid state: %s", p.State)})
+		return nil, auth.InvalidState("Invalid or expired state parameter")
 	}
+
+	// Remove used state
+	s.statesMutex.Lock()
+	delete(s.states, p.State)
+	s.statesMutex.Unlock()
+
+	// Exchange code for token
+	token, err := s.oauthConfig.Exchange(ctx, p.Code)
 	if err != nil {
-		log.Errorf(ctx, err, "failed to get state from redis")
-		return nil, auth.InternalError("failed to get state from redis")
-	}
-	if val != "true" {
-		log.Printf(ctx, "invalid state value: %s", val)
-		return nil, auth.InvalidState("invalid state value")
-	}
-	// Delete state after use
-	if err := s.redis.Del(ctx, stateKey).Err(); err != nil {
-		// Log warning but continue
-		log.Warnf(ctx, "failed to delete state from redis: %v", err)
+		log.Print(ctx, log.KV{"auth.oauth_callback", "ERROR: failed to exchange code"}, log.KV{"error", err.Error()})
+		return nil, auth.InvalidCode("Invalid authorization code")
 	}
 
-	// 2. Exchange code for access token
-	clientID := os.Getenv("GITHUB_CLIENT_ID")
-	clientSecret := os.Getenv("GITHUB_CLIENT_SECRET")
-	redirectURI := os.Getenv("GITHUB_REDIRECT_URL")
-
-	tokenURL := "https://github.com/login/oauth/access_token"
-	reqBody, _ := json.Marshal(map[string]string{
-		"client_id":     clientID,
-		"client_secret": clientSecret,
-		"code":          p.Code,
-		"redirect_uri":  redirectURI,
-	})
-
-	req, err := http.NewRequestWithContext(ctx, "POST", tokenURL, bytes.NewBuffer(reqBody))
+	// Fetch GitHub user profile
+	githubUser, err := s.fetchGitHubUser(ctx, token)
 	if err != nil {
-		log.Errorf(ctx, err, "failed to create request to github")
-		return nil, auth.InternalError("failed to create request to github")
+		log.Print(ctx, log.KV{"auth.oauth_callback", "ERROR: failed to fetch GitHub user"}, log.KV{"error", err.Error()})
+		return nil, auth.GithubError("Failed to fetch GitHub user profile")
 	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	// Generate opaque token
+	opaqueToken := uuid.New().String()
+
+	// Store token with 1 hour expiration
+	s.tokensMutex.Lock()
+	s.tokens[opaqueToken] = tokenEntry{
+		UserID:    fmt.Sprintf("%d", githubUser.ID),
+		Login:     githubUser.Login,
+		CreatedAt: time.Now(),
+		ExpiresAt: time.Now().Add(10 * time.Hour),
+	}
+	s.tokensMutex.Unlock()
+
+	res = &auth.OauthCallbackResult{
+		AccessToken: opaqueToken,
+		TokenType:   "Bearer",
+		ExpiresIn:   36000,
+		UserID:      fmt.Sprintf("%d", githubUser.ID),
+	}
+
+	log.Info(ctx, log.KV{"auth.oauth_callback", fmt.Sprintf("generated token for user %s (ID: %d)", githubUser.Login, githubUser.ID)})
+	return
+}
+
+// Introspect opaque token and return internal JWT token for Kong Gateway
+func (s *authsrvc) Introspect(ctx context.Context, p *auth.IntrospectPayload) (res *auth.IntrospectResult, err error) {
+	s.cleanExpired()
+
+	// Validate opaque token
+	s.tokensMutex.RLock()
+	tokenEntry, exists := s.tokens[p.Token]
+	s.tokensMutex.RUnlock()
+
+	if !exists || time.Now().After(tokenEntry.ExpiresAt) {
+		log.Print(ctx, log.KV{"auth.introspect", "ERROR: invalid token"})
+		return nil, auth.InvalidToken("Token is invalid or expired")
+	}
+
+	// Create JWT claims
+	claims := jwt.MapClaims{
+		"sub":    tokenEntry.UserID,
+		"login":  tokenEntry.Login,
+		"scopes": []string{"api:read", "api:write"},
+		"iat":    time.Now().Unix(),
+		"exp":    tokenEntry.ExpiresAt.Unix(),
+	}
+
+	log.Print(ctx, log.KV{"auth.introspect", "DEBUG: creating JWT for token validation"})
+
+	// Create and sign JWT
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	jwtString, err := jwtToken.SignedString(s.jwtSecret)
 	if err != nil {
-		log.Errorf(ctx, err, "failed to request access token from github")
-		return nil, auth.GithubError("failed to request access token from github")
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		log.Errorf(ctx, nil, "github returned non-200 status for access token: %s", string(bodyBytes))
-		return nil, auth.InvalidCode("github returned non-200 status for access token")
+		log.Print(ctx, log.KV{"auth.introspect", "ERROR: failed to sign JWT"}, log.KV{"error", err.Error()})
+		return nil, auth.InternalError("Failed to generate internal token")
 	}
 
-	var tokenRes struct {
-		AccessToken string `json:"access_token"`
-		Scope       string `json:"scope"`
-		TokenType   string `json:"token_type"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&tokenRes); err != nil {
-		log.Errorf(ctx, err, "failed to decode access token response from github")
-		return nil, auth.InternalError("failed to decode access token response")
-	}
-	if tokenRes.AccessToken == "" {
-		log.Errorf(ctx, nil, "access token is empty in github response")
-		return nil, auth.InvalidCode("access token is empty in github response")
+	exp := tokenEntry.ExpiresAt.Unix()
+	res = &auth.IntrospectResult{
+		JWT:    jwtString,
+		Active: true,
+		Exp:    &exp,
+		Scopes: []string{"api:read", "api:write"},
 	}
 
-	// 3. Get user info
-	userURL := "https://api.github.com/user"
-	req, err = http.NewRequestWithContext(ctx, "GET", userURL, nil)
-	if err != nil {
-		log.Errorf(ctx, err, "failed to create request for user info")
-		return nil, auth.InternalError("failed to create request for user info")
-	}
-	req.Header.Set("Authorization", "Bearer "+tokenRes.AccessToken)
-
-	resp, err = client.Do(req)
-	if err != nil {
-		log.Errorf(ctx, err, "failed to request user info from github")
-		return nil, auth.GithubError("failed to request user info from github")
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		log.Errorf(ctx, nil, "github returned non-200 status for user info: %s", string(bodyBytes))
-		return nil, auth.GithubError("github returned non-200 status for user info")
-	}
-
-	var userRes struct {
-		ID    int64  `json:"id"`
-		Login string `json:"login"`
-	}
-	log.Printf(ctx, "github user info response: %s", resp.Body)
-	if err := json.NewDecoder(resp.Body).Decode(&userRes); err != nil {
-		log.Errorf(ctx, err, "failed to decode user info response from github")
-		return nil, auth.InternalError("failed to decode user info response")
-	}
-
-	// 4. Create Opaque Token and store info in Redis
-	opaqueToken := uuid.NewString()
-
-	expiration := 1 * time.Hour
-	tokenKey := "token:" + opaqueToken
-	if err := s.redis.Set(ctx, tokenKey, userRes.ID, expiration).Err(); err != nil {
-		log.Errorf(ctx, err, "failed to store opaque token in redis")
-		return nil, auth.InternalError("failed to store opaque token in redis")
-	}
-
-	var authModel model.Auth
-	
-	UserID := strconv.FormatInt(userRes.ID, 10)
-	Name := userRes.Login
-
-	val, err = s.redis.Get(ctx, Name).Result()
-	if err == redis.Nil {
-		s.redis.Set(ctx, Name, true, 10*time.Minute)
-		claims := jwt.MapClaims{
-			"sub":   UserID,
-			"scope": []string{"api:register"},
-			"iat":   time.Now().Unix(),
-			"exp":   time.Now().Add(time.Minute).Unix(),
-		}
-		t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-		token, err := t.SignedString([]byte("secret"))
-		if err != nil {
-			log.Errorf(ctx, err, "failed to sign token for user %s", UserID)
-			return nil, auth.InternalError("failed to sign token for user")
-		}
-
-		res.AccessToken = token
-		res.TokenType = "Bearer"
-		res.ExpiresIn = int64(expiration.Seconds())
-		res.UserID = UserID
-		res.UserName = &Name
-
-		return res, nil
-	}
-
-	authModel.UserID = UserID
-	authModel.Name = Name
-
-	// 5. Return result
-	res.AccessToken = opaqueToken
-	res.TokenType = "Bearer"
-	res.ExpiresIn = int64(expiration.Seconds())
-	res.UserID = UserID
-	res.UserName = &Name
-
-	log.Printf(ctx, "successfully issued opaque token for user %s", res.UserID)
-
-	return res, nil
+	log.Info(ctx, log.KV{"auth.introspect", fmt.Sprintf("validated token for user %s", tokenEntry.Login)})
+	return
 }

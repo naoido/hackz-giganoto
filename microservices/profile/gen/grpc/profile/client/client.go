@@ -31,28 +31,6 @@ func NewClient(cc *grpc.ClientConn, opts ...grpc.CallOption) *Client {
 	}
 }
 
-// CreateProfile calls the "CreateProfile" function in profilepb.ProfileClient
-// interface.
-func (c *Client) CreateProfile() goa.Endpoint {
-	return func(ctx context.Context, v any) (any, error) {
-		inv := goagrpc.NewInvoker(
-			BuildCreateProfileFunc(c.grpccli, c.opts...),
-			EncodeCreateProfileRequest,
-			DecodeCreateProfileResponse)
-		res, err := inv.Invoke(ctx, v)
-		if err != nil {
-			resp := goagrpc.DecodeError(err)
-			switch message := resp.(type) {
-			case *goapb.ErrorResponse:
-				return nil, goagrpc.NewServiceError(message)
-			default:
-				return nil, goa.Fault("%s", err.Error())
-			}
-		}
-		return res, nil
-	}
-}
-
 // GetProfile calls the "GetProfile" function in profilepb.ProfileClient
 // interface.
 func (c *Client) GetProfile() goa.Endpoint {

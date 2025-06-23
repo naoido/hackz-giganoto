@@ -20,7 +20,6 @@ import (
 
 // Server implements the profilepb.ProfileServer interface.
 type Server struct {
-	CreateProfileH goagrpc.UnaryHandler
 	GetProfileH    goagrpc.UnaryHandler
 	UpdateProfileH goagrpc.UnaryHandler
 	profilepb.UnimplementedProfileServer
@@ -29,40 +28,9 @@ type Server struct {
 // New instantiates the server struct with the profile service endpoints.
 func New(e *profile.Endpoints, uh goagrpc.UnaryHandler) *Server {
 	return &Server{
-		CreateProfileH: NewCreateProfileHandler(e.CreateProfile, uh),
 		GetProfileH:    NewGetProfileHandler(e.GetProfile, uh),
 		UpdateProfileH: NewUpdateProfileHandler(e.UpdateProfile, uh),
 	}
-}
-
-// NewCreateProfileHandler creates a gRPC handler which serves the "profile"
-// service "create_profile" endpoint.
-func NewCreateProfileHandler(endpoint goa.Endpoint, h goagrpc.UnaryHandler) goagrpc.UnaryHandler {
-	if h == nil {
-		h = goagrpc.NewUnaryHandler(endpoint, DecodeCreateProfileRequest, EncodeCreateProfileResponse)
-	}
-	return h
-}
-
-// CreateProfile implements the "CreateProfile" method in
-// profilepb.ProfileServer interface.
-func (s *Server) CreateProfile(ctx context.Context, message *profilepb.CreateProfileRequest) (*profilepb.CreateProfileResponse, error) {
-	ctx = context.WithValue(ctx, goa.MethodKey, "create_profile")
-	ctx = context.WithValue(ctx, goa.ServiceKey, "profile")
-	resp, err := s.CreateProfileH.Handle(ctx, message)
-	if err != nil {
-		var en goa.GoaErrorNamer
-		if errors.As(err, &en) {
-			switch en.GoaErrorName() {
-			case "unauthorized":
-				return nil, goagrpc.NewStatusError(codes.Unauthenticated, err, goagrpc.NewErrorResponse(err))
-			case "internal_error":
-				return nil, goagrpc.NewStatusError(codes.Internal, err, goagrpc.NewErrorResponse(err))
-			}
-		}
-		return nil, goagrpc.EncodeError(err)
-	}
-	return resp.(*profilepb.CreateProfileResponse), nil
 }
 
 // NewGetProfileHandler creates a gRPC handler which serves the "profile"
@@ -90,8 +58,6 @@ func (s *Server) GetProfile(ctx context.Context, message *profilepb.GetProfileRe
 				return nil, goagrpc.NewStatusError(codes.NotFound, err, goagrpc.NewErrorResponse(err))
 			case "internal_error":
 				return nil, goagrpc.NewStatusError(codes.Internal, err, goagrpc.NewErrorResponse(err))
-			case "invalid_token":
-				return nil, goagrpc.NewStatusError(401, err, goagrpc.NewErrorResponse(err))
 			}
 		}
 		return nil, goagrpc.EncodeError(err)
@@ -124,8 +90,6 @@ func (s *Server) UpdateProfile(ctx context.Context, message *profilepb.UpdatePro
 				return nil, goagrpc.NewStatusError(codes.InvalidArgument, err, goagrpc.NewErrorResponse(err))
 			case "internal_error":
 				return nil, goagrpc.NewStatusError(codes.Internal, err, goagrpc.NewErrorResponse(err))
-			case "invalid_token":
-				return nil, goagrpc.NewStatusError(401, err, goagrpc.NewErrorResponse(err))
 			}
 		}
 		return nil, goagrpc.EncodeError(err)
