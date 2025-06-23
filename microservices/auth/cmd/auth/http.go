@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"net/http"
 	"net/url"
 	"sync"
@@ -56,6 +57,8 @@ func handleHTTPServer(ctx context.Context, u *url.URL, authEndpoints *auth.Endpo
 	authsvr.Mount(mux, authServer)
 
 	var handler http.Handler = mux
+	handler = otelhttp.NewHandler(handler, "auth-service")
+
 	if dbg {
 		// Log query and response bodies if debug logs are enabled.
 		handler = debug.HTTP()(handler)

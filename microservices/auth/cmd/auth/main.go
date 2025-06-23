@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"object-t.com/hackz-giganoto/pkg/telemetry"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -29,6 +31,28 @@ func main() {
 	)
 	flag.Parse()
 
+	// Initialize OpenTelemetry
+	config := telemetry.DefaultConfig("auth-service")
+	if endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"); endpoint != "" {
+		// Remove http:// prefix if present for gRPC connection
+		if strings.HasPrefix(endpoint, "http://") {
+			endpoint = strings.TrimPrefix(endpoint, "http://")
+		}
+		config.CollectorAddr = endpoint
+	}
+	if serviceName := os.Getenv("OTEL_SERVICE_NAME"); serviceName != "" {
+		config.ServiceName = serviceName
+	}
+	if serviceVersion := os.Getenv("OTEL_SERVICE_VERSION"); serviceVersion != "" {
+		config.ServiceVersion = serviceVersion
+	}
+
+	_, cleanup, err := telemetry.Init(context.Background(), config)
+	if err != nil {
+		log.Fatalf(context.Background(), err, "failed to initialize OpenTelemetry")
+	}
+	defer cleanup()
+
 	// Setup logger. Replace logger with your own log package of choice.
 	format := log.FormatJSON
 	if log.IsTerminal() {
@@ -39,7 +63,15 @@ func main() {
 		ctx = log.Context(ctx, log.WithDebug())
 		log.Debugf(ctx, "debug logs enabled")
 	}
-	log.Print(ctx, log.KV{K: "http-port", V: *httpPortF})
+
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
+	}
+
+	if err != nil {
+		log.Fatalf(ctx, err, "failed to connect to redis")
+	}
 
 	// Initialize the services.
 	var (
@@ -79,7 +111,7 @@ func main() {
 	switch *hostF {
 	case "localhost":
 		{
-			addr := "http://localhost:80"
+			addr := "http://localhost:8000"
 			u, err := url.Parse(addr)
 			if err != nil {
 				log.Fatalf(ctx, err, "invalid URL %#v\n", addr)
@@ -97,7 +129,7 @@ func main() {
 				}
 				u.Host = net.JoinHostPort(h, *httpPortF)
 			} else if u.Port() == "" {
-				u.Host = net.JoinHostPort(u.Host, "80")
+				u.Host = net.JoinHostPort(u.Host, "8000")
 			}
 			handleHTTPServer(ctx, u, authEndpoints, &wg, errc, *dbgF)
 		}

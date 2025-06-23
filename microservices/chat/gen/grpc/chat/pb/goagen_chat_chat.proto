@@ -1,0 +1,105 @@
+// Code generated with goa v3.21.1, DO NOT EDIT.
+//
+// chat protocol buffer definition
+//
+// Command:
+// $ goa gen object-t.com/hackz-giganoto/microservices/chat/design
+
+syntax = "proto3";
+
+package chat.v1;
+
+option go_package = "/chat.v1pb";
+
+// Real-time chat service with bidirectional streaming
+service Chat {
+	// Creates a new chat room
+	rpc CreateRoom (CreateRoomRequest) returns (CreateRoomResponse);
+	// Get all chat rooms history
+	rpc History (HistoryRequest) returns (HistoryResponse);
+	// Get all chat rooms history
+	rpc RoomList (RoomListRequest) returns (RoomListResponse);
+	// Creates a new chat room
+	rpc JoinRoom (JoinRoomRequest) returns (JoinRoomResponse);
+	// Creates a new chat room
+	rpc InviteRoom (InviteRoomRequest) returns (InviteRoomResponse);
+	// Streams chat room events on a chat room
+	rpc StreamRoom (stream StreamRoomStreamingRequest) returns (stream StreamRoomResponse);
+}
+
+message CreateRoomRequest {
+}
+
+message CreateRoomResponse {
+	string field = 1;
+}
+
+message HistoryRequest {
+	// The id of the room
+	string room_id = 1;
+}
+
+message HistoryResponse {
+	repeated Chat2 field = 1;
+}
+// Chat message
+message Chat2 {
+	// user_id
+	string user_id = 1;
+	// Message content
+	string message_ = 2;
+	// ID
+	string id = 3;
+	// Created timestamp
+	sint64 created_at = 4;
+	// Updated timestamp
+	sint64 updated_at = 5;
+	// room
+	string room_id = 6;
+}
+
+message RoomListRequest {
+}
+
+message RoomListResponse {
+	repeated string field = 1;
+}
+
+message JoinRoomRequest {
+	// Invite key
+	string invite_key = 1;
+}
+
+message JoinRoomResponse {
+	string field = 1;
+}
+
+message InviteRoomRequest {
+	// The id of the room
+	string room_id = 1;
+	// The id of the user
+	string user_id = 2;
+}
+
+message InviteRoomResponse {
+	string field = 1;
+}
+
+message StreamRoomStreamingRequest {
+	string field = 1;
+}
+
+message StreamRoomResponse {
+	// user_id
+	string user_id = 1;
+	// Message content
+	string message_ = 2;
+	// ID
+	string id = 3;
+	// Created timestamp
+	sint64 created_at = 4;
+	// Updated timestamp
+	sint64 updated_at = 5;
+	// room
+	string room_id = 6;
+}

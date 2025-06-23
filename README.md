@@ -40,9 +40,9 @@
     - 内部でgoa genを実行します
 8. そして`make example-${サービス名}`を実行する
     - 内部でgoa exampleを実行します
-9`docker-compose.yaml`に作成したマイクロサービスを追記します。
-10`docker compose build ${サービス名}`を実行しビルドする
-11`docker compose up`で起動する
+9. `docker-compose.yaml`に作成したマイクロサービスを追記します。
+10. `docker compose build ${サービス名}`を実行しビルドする
+11. `docker compose up`で起動する
 
 ### ディレクトリ構造 📁
 ```sh

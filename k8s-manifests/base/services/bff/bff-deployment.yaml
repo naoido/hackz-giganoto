@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bff-deployment
+  namespace: hackz-giganoto
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bff
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: bff
+        version: v1
+    spec:
+      containers:
+      - name: bff
+        image: ghcr.io/naoido/hackz-giganoto-bff:latest
+        ports:
+        - containerPort: 50054
+          name: grpc
+        env:
+        - name: PORT
+          value: "50054"
+        - name: REDIS_ADDR
+          value: "bff-redis-service:6379"
+        - name: CHAT_SERVICE_ADDR
+          value: "chat-service:50053"
+        - name: PROFILE_SERVICE_ADDR
+          value: "profile-service:50052"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector-service:4317"
+        - name: OTEL_SERVICE_NAME
+          value: "bff-service"
+        - name: OTEL_SERVICE_VERSION
+          value: "1.0.0"
+        livenessProbe:
+          exec:
+            command:
+            - grpc_health_probe
+            - -addr=:50054
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - grpc_health_probe
+            - -addr=:50054
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"

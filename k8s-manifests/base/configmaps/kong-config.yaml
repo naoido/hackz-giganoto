@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kong-config
+  namespace: hackz-giganoto
+data:
+  kong.yaml: |
+    _format_version: "3.0"
+
+    services:
+      - name: bff-grpc-service
+        protocol: grpc
+        host: bff-service
+        port: 50054
+
+      - name: auth-service
+        protocol: http
+        host: auth-service
+        port: 8000
+
+    routes:
+      - name: bff-grpc-route
+        protocols:
+          - grpc
+        paths:
+          - "/bff.v1.Bff/CreateRoom"
+          - "/bff.v1.Bff/History"
+          - "/bff.v1.Bff/RoomList"
+          - "/bff.v1.Bff/JoinRoom"
+          - "/bff.v1.Bff/InviteRoom"
+          - "/bff.v1.Bff/StreamChat"
+          - "/bff.v1.Bff/GetProfile"
+          - "/bff.v1.Bff/UpdateProfile"
+        service: bff-grpc-service
+        plugins:
+          - name: opentelemetry
+            config:
+              traces_endpoint: http://otel-collector-service:4318/v1/traces
+              resource_attributes:
+                service.name: kong-gateway
+                service.version: 1.0.0
+              sampling_rate: 1.0
+              connect_timeout: 10000
+              read_timeout: 10000
+              send_timeout: 10000
+              propagation:
+                default_format: w3c
+                extract:
+                  - w3c
+                  - jaeger
+                inject:
+                  - w3c
+
+      - name: auth-github-route
+        protocols:
+          - http
+        paths:
+          - /auth/github
+        service: auth-service
+        strip_path: false
+        plugins:
+          - name: cors
+            config:
+              origins:
+                - "*"
+              methods:
+                - GET
+                - POST
+                - PUT
+                - DELETE
+                - OPTIONS
+              headers:
+                - Accept
+                - Accept-Version
+                - Content-Length
+                - Content-MD5
+                - Content-Type
+                - Date
+                - Authorization
+              exposed_headers:
+                - X-Auth-Token
+              credentials: true
+              max_age: 3600
+          - name: opentelemetry
+            config:
+              traces_endpoint: http://otel-collector-service:4318/v1/traces
+              resource_attributes:
+                service.name: kong-gateway
+                service.version: 1.0.0
+
+      - name: auth-callback-route
+        protocols:
+          - http
+        paths:
+          - /auth/github/callback
+        service: auth-service
+        strip_path: false
+        plugins:
+          - name: cors
+            config:
+              origins:
+                - "*"
+              methods:
+                - GET
+                - POST
+                - PUT
+                - DELETE
+                - OPTIONS
+              headers:
+                - Accept
+                - Accept-Version
+                - Content-Length
+                - Content-MD5
+                - Content-Type
+                - Date
+                - Authorization
+              exposed_headers:
+                - X-Auth-Token
+              credentials: true
+              max_age: 3600
+
+    plugins:
+      - name: token-transformer
+        service: bff-grpc-service

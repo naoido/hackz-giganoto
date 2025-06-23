@@ -1,6 +1,12 @@
-go 1.24.0
+go 1.24.4
 
 use (
 	./microservices/auth
+	./microservices/bff
+	./microservices/chat
+	./microservices/profile
+	./microservices/wiki
 	./pkg/redis
+	./pkg/security
+	./pkg/telemetry
 )

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hackz-giganoto
+  labels:
+    app.kubernetes.io/name: hackz-giganoto
+    app.kubernetes.io/instance: hackz-giganoto
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: argocd
