@@ -13,29 +13,15 @@ option go_package = "/profile.v1pb";
 
 // User profile management service
 service Profile {
-	// Create a new user profile
-	rpc CreateProfile (CreateProfileRequest) returns (CreateProfileResponse);
 	// Get user profile
 	rpc GetProfile (GetProfileRequest) returns (GetProfileResponse);
 	// Update user profile
 	rpc UpdateProfile (UpdateProfileRequest) returns (UpdateProfileResponse);
 }
 
-message CreateProfileRequest {
-	// User ID
-	string user_id = 1;
-	// User name
-	string name = 2;
-}
-
-message CreateProfileResponse {
-	// User ID
-	string user_id = 1;
-	// User name
-	string name = 2;
-}
-
 message GetProfileRequest {
+	// The user_id of the user
+	string user_id = 1;
 }
 
 message GetProfileResponse {

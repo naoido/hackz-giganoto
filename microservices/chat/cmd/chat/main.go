@@ -119,7 +119,7 @@ func main() {
 				}
 				u.Host = net.JoinHostPort(h, *grpcPortF)
 			} else if u.Port() == "" {
-				u.Host = net.JoinHostPort(u.Host, "8080")
+				u.Host = net.JoinHostPort(u.Host, "50053")
 			}
 			handleGRPCServer(ctx, u, chatEndpoints, &wg, errc, *dbgF)
 		}

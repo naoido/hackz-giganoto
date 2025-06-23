@@ -4,7 +4,7 @@ services:
   - name: bff-grpc-service
     protocol: grpc
     host: bff
-    port: 50054
+    port: 50000
 
   - name: auth-service
     protocol: http
@@ -52,28 +52,6 @@ routes:
     service: auth-service
     strip_path: false
     plugins:
-      - name: cors
-        config:
-          origins:
-            - "*"
-          methods:
-            - GET
-            - POST
-            - PUT
-            - DELETE
-            - OPTIONS
-          headers:
-            - Accept
-            - Accept-Version
-            - Content-Length
-            - Content-MD5
-            - Content-Type
-            - Date
-            - Authorization
-          exposed_headers:
-            - X-Auth-Token
-          credentials: true
-          max_age: 3600
       - name: opentelemetry
         config:
           traces_endpoint: http://otel-collector:4318/v1/traces
@@ -100,28 +78,6 @@ routes:
     service: auth-service
     strip_path: false
     plugins:
-      - name: cors
-        config:
-          origins:
-            - "*"
-          methods:
-            - GET
-            - POST
-            - PUT
-            - DELETE
-            - OPTIONS
-          headers:
-            - Accept
-            - Accept-Version
-            - Content-Length
-            - Content-MD5
-            - Content-Type
-            - Date
-            - Authorization
-          exposed_headers:
-            - X-Auth-Token
-          credentials: true
-          max_age: 3600
       - name: opentelemetry
         config:
           traces_endpoint: http://otel-collector:4318/v1/traces

@@ -111,7 +111,9 @@ type EnrichedMessage struct {
 // GetProfilePayload is the payload type of the bff service get_profile method.
 type GetProfilePayload struct {
 	// JWT token
-	Token *string
+	Token string
+	// User ID
+	UserID string
 }
 
 // GetProfileResult is the result type of the bff service get_profile method.
@@ -120,10 +122,6 @@ type GetProfileResult struct {
 	UserID string
 	// User name
 	Name string
-	// Creation timestamp
-	CreatedAt *string
-	// Last update timestamp
-	UpdatedAt *string
 }
 
 // HistoryPayload is the payload type of the bff service history method.
@@ -182,10 +180,6 @@ type UpdateProfileResult struct {
 	UserID string
 	// User name
 	Name string
-	// Creation timestamp
-	CreatedAt *string
-	// Last update timestamp
-	UpdatedAt *string
 }
 
 // Invalid request

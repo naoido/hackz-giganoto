@@ -27,7 +27,7 @@ func UsageCommands() string {
 
 // UsageExamples produces an example of a valid invocation of the CLI tool.
 func UsageExamples() string {
-	return os.Args[0] + ` bff create-room --token "Totam voluptatum in error suscipit eius impedit."` + "\n" +
+	return os.Args[0] + ` bff create-room --token "Aspernatur tenetur libero accusantium laborum."` + "\n" +
 		""
 }
 
@@ -62,8 +62,9 @@ func ParseEndpoint(
 		bffStreamChatTokenFlag  = bffStreamChatFlags.String("token", "REQUIRED", "")
 		bffStreamChatRoomIDFlag = bffStreamChatFlags.String("room-id", "REQUIRED", "")
 
-		bffGetProfileFlags     = flag.NewFlagSet("get-profile", flag.ExitOnError)
-		bffGetProfileTokenFlag = bffGetProfileFlags.String("token", "", "")
+		bffGetProfileFlags       = flag.NewFlagSet("get-profile", flag.ExitOnError)
+		bffGetProfileMessageFlag = bffGetProfileFlags.String("message", "", "")
+		bffGetProfileTokenFlag   = bffGetProfileFlags.String("token", "REQUIRED", "")
 
 		bffUpdateProfileFlags       = flag.NewFlagSet("update-profile", flag.ExitOnError)
 		bffUpdateProfileMessageFlag = bffUpdateProfileFlags.String("message", "", "")
@@ -182,7 +183,7 @@ func ParseEndpoint(
 				data, err = bffc.BuildStreamChatPayload(*bffStreamChatTokenFlag, *bffStreamChatRoomIDFlag)
 			case "get-profile":
 				endpoint = c.GetProfile()
-				data, err = bffc.BuildGetProfilePayload(*bffGetProfileTokenFlag)
+				data, err = bffc.BuildGetProfilePayload(*bffGetProfileMessageFlag, *bffGetProfileTokenFlag)
 			case "update-profile":
 				endpoint = c.UpdateProfile()
 				data, err = bffc.BuildUpdateProfilePayload(*bffUpdateProfileMessageFlag, *bffUpdateProfileTokenFlag)
@@ -223,7 +224,7 @@ Create a new chat room
     -token STRING: 
 
 Example:
-    %[1]s bff create-room --token "Totam voluptatum in error suscipit eius impedit."
+    %[1]s bff create-room --token "Aspernatur tenetur libero accusantium laborum."
 `, os.Args[0])
 }
 
@@ -236,8 +237,8 @@ Get chat room history with enriched user names
 
 Example:
     %[1]s bff history --message '{
-      "room_id": "Est sunt."
-   }' --token "Dolores consequatur dolores."
+      "room_id": "Pariatur non commodi sunt quibusdam."
+   }' --token "Totam voluptatum in error suscipit eius impedit."
 `, os.Args[0])
 }
 
@@ -248,7 +249,7 @@ Get all chat rooms history
     -token STRING: 
 
 Example:
-    %[1]s bff room-list --token "Sit et voluptate quia et."
+    %[1]s bff room-list --token "Quia illum officiis et."
 `, os.Args[0])
 }
 
@@ -261,8 +262,8 @@ Creates a new chat room
 
 Example:
     %[1]s bff join-room --message '{
-      "invite_key": "Sed dolorem."
-   }' --token "Veritatis error et nulla eius."
+      "invite_key": "Et quae consequatur expedita."
+   }' --token "Sunt doloribus quibusdam nihil sed."
 `, os.Args[0])
 }
 
@@ -275,9 +276,9 @@ Creates a new chat room
 
 Example:
     %[1]s bff invite-room --message '{
-      "room_id": "Quo facilis quas voluptatum.",
-      "user_id": "Omnis voluptatum expedita."
-   }' --token "Autem ipsam officiis rem autem."
+      "room_id": "Veritatis error et nulla eius.",
+      "user_id": "Sed dolorem."
+   }' --token "Mollitia corrupti placeat enim aut."
 `, os.Args[0])
 }
 
@@ -289,18 +290,21 @@ Stream chat messages with bidirectional communication
     -room-id STRING: 
 
 Example:
-    %[1]s bff stream-chat --token "Praesentium harum laboriosam dolorem culpa." --room-id "Laboriosam reprehenderit esse."
+    %[1]s bff stream-chat --token "Autem ipsam officiis rem autem." --room-id "Quo facilis quas voluptatum."
 `, os.Args[0])
 }
 
 func bffGetProfileUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] bff get-profile -token STRING
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] bff get-profile -message JSON -token STRING
 
 Get current user profile
+    -message JSON: 
     -token STRING: 
 
 Example:
-    %[1]s bff get-profile --token "Nisi a quam perspiciatis."
+    %[1]s bff get-profile --message '{
+      "user_id": "Alias vel."
+   }' --token "Nostrum ipsa consequatur vel et inventore."
 `, os.Args[0])
 }
 
@@ -313,7 +317,7 @@ Update current user profile
 
 Example:
     %[1]s bff update-profile --message '{
-      "name": "Labore ipsum ut dolor atque impedit quis."
-   }' --token "Aut dignissimos ducimus explicabo expedita modi."
+      "name": "Rem non sequi rerum dicta autem."
+   }' --token "Nostrum quo et quia."
 `, os.Args[0])
 }

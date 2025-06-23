@@ -185,6 +185,7 @@ func (s *chatsrvc) StreamRoom(ctx context.Context, p *chat.StreamRoomPayload, st
 
 			newChat := chat.Chat{
 				ID:        uuid.NewString(),
+				RoomID:    p.RoomID,
 				UserID:    userID,
 				Message:   msg,
 				CreatedAt: time.Now().Unix(),

@@ -27,7 +27,7 @@ func UsageCommands() string {
 
 // UsageExamples produces an example of a valid invocation of the CLI tool.
 func UsageExamples() string {
-	return os.Args[0] + ` chat create-room --token "Eaque laboriosam ducimus soluta."` + "\n" +
+	return os.Args[0] + ` chat create-room --token "Totam provident reiciendis."` + "\n" +
 		""
 }
 
@@ -200,7 +200,7 @@ Creates a new chat room
     -token STRING: 
 
 Example:
-    %[1]s chat create-room --token "Eaque laboriosam ducimus soluta."
+    %[1]s chat create-room --token "Totam provident reiciendis."
 `, os.Args[0])
 }
 
@@ -213,8 +213,8 @@ Get all chat rooms history
 
 Example:
     %[1]s chat history --message '{
-      "room_id": "Atque voluptate explicabo est sed."
-   }' --token "Rerum sapiente reiciendis nobis et voluptatem."
+      "room_id": "Rerum sapiente reiciendis nobis et voluptatem."
+   }' --token "Corrupti libero."
 `, os.Args[0])
 }
 
@@ -225,7 +225,7 @@ Get all chat rooms history
     -token STRING: 
 
 Example:
-    %[1]s chat room-list --token "Et officiis qui."
+    %[1]s chat room-list --token "Explicabo est sed labore."
 `, os.Args[0])
 }
 
@@ -238,8 +238,8 @@ Creates a new chat room
 
 Example:
     %[1]s chat join-room --message '{
-      "invite_key": "Placeat enim."
-   }' --token "Reprehenderit voluptas esse quis."
+      "invite_key": "Enim voluptas."
+   }' --token "Quae reprehenderit voluptas esse quis laboriosam."
 `, os.Args[0])
 }
 
@@ -252,9 +252,9 @@ Creates a new chat room
 
 Example:
     %[1]s chat invite-room --message '{
-      "room_id": "Culpa eveniet rerum nam suscipit reiciendis sed.",
-      "user_id": "Labore culpa."
-   }' --token "Totam ea ipsa."
+      "room_id": "Sed ipsam.",
+      "user_id": "Culpa laudantium qui esse non dolorem et."
+   }' --token "Rerum nam suscipit."
 `, os.Args[0])
 }
 
@@ -266,6 +266,6 @@ Streams chat room events on a chat room
     -room-id STRING: 
 
 Example:
-    %[1]s chat stream-room --token "Et doloremque non mollitia." --room-id "Accusamus sunt."
+    %[1]s chat stream-room --token "Accusamus sunt." --room-id "Qui sit."
 `, os.Args[0])
 }

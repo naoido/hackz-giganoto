@@ -306,26 +306,35 @@ func EncodeGetProfileResponse(ctx context.Context, v any, hdr, trlr *metadata.MD
 // endpoint.
 func DecodeGetProfileRequest(ctx context.Context, v any, md metadata.MD) (any, error) {
 	var (
-		token *string
+		token string
 		err   error
 	)
 	{
-		if vals := md.Get("authorization"); len(vals) > 0 {
-			token = &vals[0]
+		if vals := md.Get("authorization"); len(vals) == 0 {
+			err = goa.MergeErrors(err, goa.MissingFieldError("authorization", "metadata"))
+		} else {
+			token = vals[0]
 		}
 	}
 	if err != nil {
 		return nil, err
 	}
+	var (
+		message *bffpb.GetProfileRequest
+		ok      bool
+	)
+	{
+		if message, ok = v.(*bffpb.GetProfileRequest); !ok {
+			return nil, goagrpc.ErrInvalidType("bff", "get_profile", "*bffpb.GetProfileRequest", v)
+		}
+	}
 	var payload *bff.GetProfilePayload
 	{
-		payload = NewGetProfilePayload(token)
-		if payload.Token != nil {
-			if strings.Contains(*payload.Token, " ") {
-				// Remove authorization scheme prefix (e.g. "Bearer")
-				cred := strings.SplitN(*payload.Token, " ", 2)[1]
-				payload.Token = &cred
-			}
+		payload = NewGetProfilePayload(message, token)
+		if strings.Contains(payload.Token, " ") {
+			// Remove authorization scheme prefix (e.g. "Bearer")
+			cred := strings.SplitN(payload.Token, " ", 2)[1]
+			payload.Token = cred
 		}
 	}
 	return payload, nil

@@ -188,11 +188,7 @@ func NewGetProfileEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoi
 			Scopes:         []string{"api:read", "api:write"},
 			RequiredScopes: []string{"api:read"},
 		}
-		var token string
-		if p.Token != nil {
-			token = *p.Token
-		}
-		ctx, err = authJWTFn(ctx, token, &sc)
+		ctx, err = authJWTFn(ctx, p.Token, &sc)
 		if err != nil {
 			return nil, err
 		}

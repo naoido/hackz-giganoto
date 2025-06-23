@@ -21,16 +21,15 @@ import (
 //
 //	command (subcommand1|subcommand2|...)
 func UsageCommands() string {
-	return `profile (create-profile|get-profile|update-profile)
+	return `profile (get-profile|update-profile)
 `
 }
 
 // UsageExamples produces an example of a valid invocation of the CLI tool.
 func UsageExamples() string {
-	return os.Args[0] + ` profile create-profile --message '{
-      "name": "Aut magnam laborum ad porro.",
-      "user_id": "Omnis enim omnis autem accusamus."
-   }' --token "Officiis ad quas nihil."` + "\n" +
+	return os.Args[0] + ` profile get-profile --message '{
+      "user_id": "Omnis alias quo numquam numquam molestiae quod."
+   }' --token "Quia repellendus et ullam blanditiis natus sunt."` + "\n" +
 		""
 }
 
@@ -43,19 +42,15 @@ func ParseEndpoint(
 	var (
 		profileFlags = flag.NewFlagSet("profile", flag.ContinueOnError)
 
-		profileCreateProfileFlags       = flag.NewFlagSet("create-profile", flag.ExitOnError)
-		profileCreateProfileMessageFlag = profileCreateProfileFlags.String("message", "", "")
-		profileCreateProfileTokenFlag   = profileCreateProfileFlags.String("token", "", "")
-
-		profileGetProfileFlags     = flag.NewFlagSet("get-profile", flag.ExitOnError)
-		profileGetProfileTokenFlag = profileGetProfileFlags.String("token", "", "")
+		profileGetProfileFlags       = flag.NewFlagSet("get-profile", flag.ExitOnError)
+		profileGetProfileMessageFlag = profileGetProfileFlags.String("message", "", "")
+		profileGetProfileTokenFlag   = profileGetProfileFlags.String("token", "REQUIRED", "")
 
 		profileUpdateProfileFlags       = flag.NewFlagSet("update-profile", flag.ExitOnError)
 		profileUpdateProfileMessageFlag = profileUpdateProfileFlags.String("message", "", "")
 		profileUpdateProfileTokenFlag   = profileUpdateProfileFlags.String("token", "", "")
 	)
 	profileFlags.Usage = profileUsage
-	profileCreateProfileFlags.Usage = profileCreateProfileUsage
 	profileGetProfileFlags.Usage = profileGetProfileUsage
 	profileUpdateProfileFlags.Usage = profileUpdateProfileUsage
 
@@ -93,9 +88,6 @@ func ParseEndpoint(
 		switch svcn {
 		case "profile":
 			switch epn {
-			case "create-profile":
-				epf = profileCreateProfileFlags
-
 			case "get-profile":
 				epf = profileGetProfileFlags
 
@@ -127,12 +119,9 @@ func ParseEndpoint(
 		case "profile":
 			c := profilec.NewClient(cc, opts...)
 			switch epn {
-			case "create-profile":
-				endpoint = c.CreateProfile()
-				data, err = profilec.BuildCreateProfilePayload(*profileCreateProfileMessageFlag, *profileCreateProfileTokenFlag)
 			case "get-profile":
 				endpoint = c.GetProfile()
-				data, err = profilec.BuildGetProfilePayload(*profileGetProfileTokenFlag)
+				data, err = profilec.BuildGetProfilePayload(*profileGetProfileMessageFlag, *profileGetProfileTokenFlag)
 			case "update-profile":
 				endpoint = c.UpdateProfile()
 				data, err = profilec.BuildUpdateProfilePayload(*profileUpdateProfileMessageFlag, *profileUpdateProfileTokenFlag)
@@ -153,7 +142,6 @@ Usage:
     %[1]s [globalflags] profile COMMAND [flags]
 
 COMMAND:
-    create-profile: Create a new user profile
     get-profile: Get user profile
     update-profile: Update user profile
 
@@ -161,29 +149,17 @@ Additional help:
     %[1]s profile COMMAND --help
 `, os.Args[0])
 }
-func profileCreateProfileUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] profile create-profile -message JSON -token STRING
+func profileGetProfileUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] profile get-profile -message JSON -token STRING
 
-Create a new user profile
+Get user profile
     -message JSON: 
     -token STRING: 
 
 Example:
-    %[1]s profile create-profile --message '{
-      "name": "Aut magnam laborum ad porro.",
-      "user_id": "Omnis enim omnis autem accusamus."
-   }' --token "Officiis ad quas nihil."
-`, os.Args[0])
-}
-
-func profileGetProfileUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] profile get-profile -token STRING
-
-Get user profile
-    -token STRING: 
-
-Example:
-    %[1]s profile get-profile --token "Esse dolor et minima exercitationem asperiores."
+    %[1]s profile get-profile --message '{
+      "user_id": "Omnis alias quo numquam numquam molestiae quod."
+   }' --token "Quia repellendus et ullam blanditiis natus sunt."
 `, os.Args[0])
 }
 
@@ -196,7 +172,7 @@ Update user profile
 
 Example:
     %[1]s profile update-profile --message '{
-      "name": "Voluptas tenetur et."
-   }' --token "Asperiores quidem."
+      "name": "Omnis enim omnis autem accusamus."
+   }' --token "Officiis ad quas nihil."
 `, os.Args[0])
 }

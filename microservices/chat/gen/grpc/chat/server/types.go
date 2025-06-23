@@ -50,6 +50,7 @@ func NewProtoHistoryResponse(result []*chat.Chat) *chatpb.HistoryResponse {
 			Id:        val.ID,
 			CreatedAt: val.CreatedAt,
 			UpdatedAt: val.UpdatedAt,
+			RoomId:    val.RoomID,
 		}
 	}
 	return message
@@ -129,6 +130,7 @@ func NewProtoStreamRoomResponse(result *chat.Chat) *chatpb.StreamRoomResponse {
 		Id:        result.ID,
 		CreatedAt: result.CreatedAt,
 		UpdatedAt: result.UpdatedAt,
+		RoomId:    result.RoomID,
 	}
 	return message
 }
@@ -140,6 +142,7 @@ func NewProtoChat2StreamRoomResponse(result *chat.Chat) *chatpb.StreamRoomRespon
 		Id:        result.ID,
 		CreatedAt: result.CreatedAt,
 		UpdatedAt: result.UpdatedAt,
+		RoomId:    result.RoomID,
 	}
 	return v
 }

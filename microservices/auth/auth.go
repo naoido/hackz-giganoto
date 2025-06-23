@@ -194,14 +194,14 @@ func (s *authsrvc) OauthCallback(ctx context.Context, p *auth.OauthCallbackPaylo
 		UserID:    fmt.Sprintf("%d", githubUser.ID),
 		Login:     githubUser.Login,
 		CreatedAt: time.Now(),
-		ExpiresAt: time.Now().Add(1 * time.Minute),
+		ExpiresAt: time.Now().Add(10 * time.Hour),
 	}
 	s.tokensMutex.Unlock()
 
 	res = &auth.OauthCallbackResult{
 		AccessToken: opaqueToken,
 		TokenType:   "Bearer",
-		ExpiresIn:   3600, // 1 hour
+		ExpiresIn:   36000,
 		UserID:      fmt.Sprintf("%d", githubUser.ID),
 	}
 

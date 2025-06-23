@@ -200,13 +200,14 @@ var _ = Service("bff", func() {
 
 		Payload(func() {
 			Token("token", String, "JWT token")
+			Field(1, "user_id", String, "User ID")
+
+			Required("token", "user_id")
 		})
 
 		Result(func() {
 			Field(1, "user_id", String, "User ID")
 			Field(2, "name", String, "User name")
-			Field(3, "created_at", String, "Creation timestamp")
-			Field(4, "updated_at", String, "Last update timestamp")
 			Required("user_id", "name")
 		})
 
@@ -238,8 +239,6 @@ var _ = Service("bff", func() {
 		Result(func() {
 			Field(1, "user_id", String, "User ID")
 			Field(2, "name", String, "User name")
-			Field(3, "created_at", String, "Creation timestamp")
-			Field(4, "updated_at", String, "Last update timestamp")
 			Required("user_id", "name")
 		})
 

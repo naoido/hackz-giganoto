@@ -15,8 +15,6 @@ import (
 
 // User profile management service
 type Service interface {
-	// Create a new user profile
-	CreateProfile(context.Context, *CreateProfilePayload) (res *CreateProfileResult, err error)
 	// Get user profile
 	GetProfile(context.Context, *GetProfilePayload) (res *GetProfileResult, err error)
 	// Update user profile
@@ -43,33 +41,15 @@ const ServiceName = "profile"
 // MethodNames lists the service method names as defined in the design. These
 // are the same values that are set in the endpoint request contexts under the
 // MethodKey key.
-var MethodNames = [3]string{"create_profile", "get_profile", "update_profile"}
-
-// CreateProfilePayload is the payload type of the profile service
-// create_profile method.
-type CreateProfilePayload struct {
-	// JWT token
-	Token *string
-	// User ID
-	UserID string
-	// User name
-	Name string
-}
-
-// CreateProfileResult is the result type of the profile service create_profile
-// method.
-type CreateProfileResult struct {
-	// User ID
-	UserID string
-	// User name
-	Name string
-}
+var MethodNames = [2]string{"get_profile", "update_profile"}
 
 // GetProfilePayload is the payload type of the profile service get_profile
 // method.
 type GetProfilePayload struct {
 	// JWT token
-	Token *string
+	Token string
+	// The user_id of the user
+	UserID string
 }
 
 // GetProfileResult is the result type of the profile service get_profile
@@ -104,9 +84,6 @@ type BadRequest string
 
 // Internal server error
 type InternalError string
-
-// Invalid or expired token
-type InvalidToken string
 
 // Profile not found
 type NotFound string
@@ -146,23 +123,6 @@ func (e InternalError) ErrorName() string {
 // GoaErrorName returns "internal_error".
 func (e InternalError) GoaErrorName() string {
 	return "internal_error"
-}
-
-// Error returns an error description.
-func (e InvalidToken) Error() string {
-	return "Invalid or expired token"
-}
-
-// ErrorName returns "invalid_token".
-//
-// Deprecated: Use GoaErrorName - https://github.com/goadesign/goa/issues/3105
-func (e InvalidToken) ErrorName() string {
-	return e.GoaErrorName()
-}
-
-// GoaErrorName returns "invalid_token".
-func (e InvalidToken) GoaErrorName() string {
-	return "invalid_token"
 }
 
 // Error returns an error description.

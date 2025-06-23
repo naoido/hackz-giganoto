@@ -239,10 +239,8 @@ func EncodeGetProfileRequest(ctx context.Context, v any, md *metadata.MD) (any, 
 	if !ok {
 		return nil, goagrpc.ErrInvalidType("bff", "get_profile", "*bff.GetProfilePayload", v)
 	}
-	if payload.Token != nil {
-		(*md).Append("authorization", *payload.Token)
-	}
-	return NewProtoGetProfileRequest(), nil
+	(*md).Append("authorization", payload.Token)
+	return NewProtoGetProfileRequest(payload), nil
 }
 
 // DecodeGetProfileResponse decodes responses from the bff get_profile endpoint.

@@ -16,7 +16,6 @@ import (
 
 // Endpoints wraps the "profile" service endpoints.
 type Endpoints struct {
-	CreateProfile goa.Endpoint
 	GetProfile    goa.Endpoint
 	UpdateProfile goa.Endpoint
 }
@@ -26,7 +25,6 @@ func NewEndpoints(s Service) *Endpoints {
 	// Casting service to Auther interface
 	a := s.(Auther)
 	return &Endpoints{
-		CreateProfile: NewCreateProfileEndpoint(s, a.JWTAuth),
 		GetProfile:    NewGetProfileEndpoint(s, a.JWTAuth),
 		UpdateProfile: NewUpdateProfileEndpoint(s, a.JWTAuth),
 	}
@@ -34,32 +32,8 @@ func NewEndpoints(s Service) *Endpoints {
 
 // Use applies the given middleware to all the "profile" service endpoints.
 func (e *Endpoints) Use(m func(goa.Endpoint) goa.Endpoint) {
-	e.CreateProfile = m(e.CreateProfile)
 	e.GetProfile = m(e.GetProfile)
 	e.UpdateProfile = m(e.UpdateProfile)
-}
-
-// NewCreateProfileEndpoint returns an endpoint function that calls the method
-// "create_profile" of service "profile".
-func NewCreateProfileEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoint {
-	return func(ctx context.Context, req any) (any, error) {
-		p := req.(*CreateProfilePayload)
-		var err error
-		sc := security.JWTScheme{
-			Name:           "jwt",
-			Scopes:         []string{"api:read", "api:write", "api:register"},
-			RequiredScopes: []string{"api:read"},
-		}
-		var token string
-		if p.Token != nil {
-			token = *p.Token
-		}
-		ctx, err = authJWTFn(ctx, token, &sc)
-		if err != nil {
-			return nil, err
-		}
-		return s.CreateProfile(ctx, p)
-	}
 }
 
 // NewGetProfileEndpoint returns an endpoint function that calls the method
@@ -73,11 +47,7 @@ func NewGetProfileEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoi
 			Scopes:         []string{"api:read", "api:write", "api:register"},
 			RequiredScopes: []string{"api:read"},
 		}
-		var token string
-		if p.Token != nil {
-			token = *p.Token
-		}
-		ctx, err = authJWTFn(ctx, token, &sc)
+		ctx, err = authJWTFn(ctx, p.Token, &sc)
 		if err != nil {
 			return nil, err
 		}

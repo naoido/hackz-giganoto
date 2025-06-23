@@ -12,59 +12,11 @@ import (
 	"strings"
 
 	goagrpc "goa.design/goa/v3/grpc"
+	goa "goa.design/goa/v3/pkg"
 	"google.golang.org/grpc/metadata"
 	profilepb "object-t.com/hackz-giganoto/microservices/profile/gen/grpc/profile/pb"
 	profile "object-t.com/hackz-giganoto/microservices/profile/gen/profile"
 )
-
-// EncodeCreateProfileResponse encodes responses from the "profile" service
-// "create_profile" endpoint.
-func EncodeCreateProfileResponse(ctx context.Context, v any, hdr, trlr *metadata.MD) (any, error) {
-	result, ok := v.(*profile.CreateProfileResult)
-	if !ok {
-		return nil, goagrpc.ErrInvalidType("profile", "create_profile", "*profile.CreateProfileResult", v)
-	}
-	resp := NewProtoCreateProfileResponse(result)
-	return resp, nil
-}
-
-// DecodeCreateProfileRequest decodes requests sent to "profile" service
-// "create_profile" endpoint.
-func DecodeCreateProfileRequest(ctx context.Context, v any, md metadata.MD) (any, error) {
-	var (
-		token *string
-		err   error
-	)
-	{
-		if vals := md.Get("authorization"); len(vals) > 0 {
-			token = &vals[0]
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	var (
-		message *profilepb.CreateProfileRequest
-		ok      bool
-	)
-	{
-		if message, ok = v.(*profilepb.CreateProfileRequest); !ok {
-			return nil, goagrpc.ErrInvalidType("profile", "create_profile", "*profilepb.CreateProfileRequest", v)
-		}
-	}
-	var payload *profile.CreateProfilePayload
-	{
-		payload = NewCreateProfilePayload(message, token)
-		if payload.Token != nil {
-			if strings.Contains(*payload.Token, " ") {
-				// Remove authorization scheme prefix (e.g. "Bearer")
-				cred := strings.SplitN(*payload.Token, " ", 2)[1]
-				payload.Token = &cred
-			}
-		}
-	}
-	return payload, nil
-}
 
 // EncodeGetProfileResponse encodes responses from the "profile" service
 // "get_profile" endpoint.
@@ -81,26 +33,35 @@ func EncodeGetProfileResponse(ctx context.Context, v any, hdr, trlr *metadata.MD
 // "get_profile" endpoint.
 func DecodeGetProfileRequest(ctx context.Context, v any, md metadata.MD) (any, error) {
 	var (
-		token *string
+		token string
 		err   error
 	)
 	{
-		if vals := md.Get("authorization"); len(vals) > 0 {
-			token = &vals[0]
+		if vals := md.Get("authorization"); len(vals) == 0 {
+			err = goa.MergeErrors(err, goa.MissingFieldError("authorization", "metadata"))
+		} else {
+			token = vals[0]
 		}
 	}
 	if err != nil {
 		return nil, err
 	}
+	var (
+		message *profilepb.GetProfileRequest
+		ok      bool
+	)
+	{
+		if message, ok = v.(*profilepb.GetProfileRequest); !ok {
+			return nil, goagrpc.ErrInvalidType("profile", "get_profile", "*profilepb.GetProfileRequest", v)
+		}
+	}
 	var payload *profile.GetProfilePayload
 	{
-		payload = NewGetProfilePayload(token)
-		if payload.Token != nil {
-			if strings.Contains(*payload.Token, " ") {
-				// Remove authorization scheme prefix (e.g. "Bearer")
-				cred := strings.SplitN(*payload.Token, " ", 2)[1]
-				payload.Token = &cred
-			}
+		payload = NewGetProfilePayload(message, token)
+		if strings.Contains(payload.Token, " ") {
+			// Remove authorization scheme prefix (e.g. "Bearer")
+			cred := strings.SplitN(payload.Token, " ", 2)[1]
+			payload.Token = cred
 		}
 	}
 	return payload, nil

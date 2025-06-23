@@ -93,6 +93,8 @@ type Chat struct {
 	CreatedAt int64
 	// Updated timestamp
 	UpdatedAt int64
+	// room
+	RoomID string
 }
 
 // CreateRoomPayload is the payload type of the chat service create-room method.

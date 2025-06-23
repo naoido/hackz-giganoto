@@ -16,7 +16,8 @@ var Chat = Type("Chat", func() {
 	Field(3, "id", String, "ID")
 	Field(4, "created_at", Int64, "Created timestamp")
 	Field(5, "updated_at", Int64, "Updated timestamp")
-	Required("user_id", "message", "id", "created_at", "updated_at")
+	Field(6, "room_id", String, "room")
+	Required("user_id", "message", "id", "created_at", "updated_at", "room_id")
 })
 
 var _ = API("chat", func() {

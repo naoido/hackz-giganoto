@@ -122,8 +122,10 @@ func NewProtoStreamChatStreamingRequest(spayload string) *bffpb.StreamChatStream
 
 // NewProtoGetProfileRequest builds the gRPC request type from the payload of
 // the "get_profile" endpoint of the "bff" service.
-func NewProtoGetProfileRequest() *bffpb.GetProfileRequest {
-	message := &bffpb.GetProfileRequest{}
+func NewProtoGetProfileRequest(payload *bff.GetProfilePayload) *bffpb.GetProfileRequest {
+	message := &bffpb.GetProfileRequest{
+		UserId: payload.UserID,
+	}
 	return message
 }
 
@@ -131,10 +133,8 @@ func NewProtoGetProfileRequest() *bffpb.GetProfileRequest {
 // the "bff" service from the gRPC response type.
 func NewGetProfileResult(message *bffpb.GetProfileResponse) *bff.GetProfileResult {
 	result := &bff.GetProfileResult{
-		UserID:    message.UserId,
-		Name:      message.Name,
-		CreatedAt: message.CreatedAt,
-		UpdatedAt: message.UpdatedAt,
+		UserID: message.UserId,
+		Name:   message.Name,
 	}
 	return result
 }
@@ -152,10 +152,8 @@ func NewProtoUpdateProfileRequest(payload *bff.UpdateProfilePayload) *bffpb.Upda
 // endpoint of the "bff" service from the gRPC response type.
 func NewUpdateProfileResult(message *bffpb.UpdateProfileResponse) *bff.UpdateProfileResult {
 	result := &bff.UpdateProfileResult{
-		UserID:    message.UserId,
-		Name:      message.Name,
-		CreatedAt: message.CreatedAt,
-		UpdatedAt: message.UpdatedAt,
+		UserID: message.UserId,
+		Name:   message.Name,
 	}
 	return result
 }

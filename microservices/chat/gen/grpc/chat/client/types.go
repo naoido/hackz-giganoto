@@ -46,6 +46,7 @@ func NewHistoryResult(message *chatpb.HistoryResponse) []*chat.Chat {
 			ID:        val.Id,
 			CreatedAt: val.CreatedAt,
 			UpdatedAt: val.UpdatedAt,
+			RoomID:    val.RoomId,
 		}
 	}
 	return result
@@ -108,6 +109,7 @@ func NewStreamRoomResponseChat2(v *chatpb.StreamRoomResponse) *chat.Chat {
 		ID:        v.Id,
 		CreatedAt: v.CreatedAt,
 		UpdatedAt: v.UpdatedAt,
+		RoomID:    v.RoomId,
 	}
 	return result
 }

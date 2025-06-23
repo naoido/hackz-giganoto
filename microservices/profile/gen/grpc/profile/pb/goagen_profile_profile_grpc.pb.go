@@ -26,7 +26,6 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Profile_CreateProfile_FullMethodName = "/profile.v1.Profile/CreateProfile"
 	Profile_GetProfile_FullMethodName    = "/profile.v1.Profile/GetProfile"
 	Profile_UpdateProfile_FullMethodName = "/profile.v1.Profile/UpdateProfile"
 )
@@ -37,8 +36,6 @@ const (
 //
 // User profile management service
 type ProfileClient interface {
-	// Create a new user profile
-	CreateProfile(ctx context.Context, in *CreateProfileRequest, opts ...grpc.CallOption) (*CreateProfileResponse, error)
 	// Get user profile
 	GetProfile(ctx context.Context, in *GetProfileRequest, opts ...grpc.CallOption) (*GetProfileResponse, error)
 	// Update user profile
@@ -51,16 +48,6 @@ type profileClient struct {
 
 func NewProfileClient(cc grpc.ClientConnInterface) ProfileClient {
 	return &profileClient{cc}
-}
-
-func (c *profileClient) CreateProfile(ctx context.Context, in *CreateProfileRequest, opts ...grpc.CallOption) (*CreateProfileResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateProfileResponse)
-	err := c.cc.Invoke(ctx, Profile_CreateProfile_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *profileClient) GetProfile(ctx context.Context, in *GetProfileRequest, opts ...grpc.CallOption) (*GetProfileResponse, error) {
@@ -89,8 +76,6 @@ func (c *profileClient) UpdateProfile(ctx context.Context, in *UpdateProfileRequ
 //
 // User profile management service
 type ProfileServer interface {
-	// Create a new user profile
-	CreateProfile(context.Context, *CreateProfileRequest) (*CreateProfileResponse, error)
 	// Get user profile
 	GetProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error)
 	// Update user profile
@@ -105,9 +90,6 @@ type ProfileServer interface {
 // pointer dereference when methods are called.
 type UnimplementedProfileServer struct{}
 
-func (UnimplementedProfileServer) CreateProfile(context.Context, *CreateProfileRequest) (*CreateProfileResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateProfile not implemented")
-}
 func (UnimplementedProfileServer) GetProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProfile not implemented")
 }
@@ -133,24 +115,6 @@ func RegisterProfileServer(s grpc.ServiceRegistrar, srv ProfileServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&Profile_ServiceDesc, srv)
-}
-
-func _Profile_CreateProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateProfileRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ProfileServer).CreateProfile(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Profile_CreateProfile_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProfileServer).CreateProfile(ctx, req.(*CreateProfileRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Profile_GetProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -196,10 +160,6 @@ var Profile_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "profile.v1.Profile",
 	HandlerType: (*ProfileServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "CreateProfile",
-			Handler:    _Profile_CreateProfile_Handler,
-		},
 		{
 			MethodName: "GetProfile",
 			Handler:    _Profile_GetProfile_Handler,

@@ -37,7 +37,7 @@ func BuildHistoryPayload(chatHistoryMessage string, chatHistoryToken string) (*c
 		if chatHistoryMessage != "" {
 			err = json.Unmarshal([]byte(chatHistoryMessage), &message)
 			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"room_id\": \"Atque voluptate explicabo est sed.\"\n   }'")
+				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"room_id\": \"Rerum sapiente reiciendis nobis et voluptatem.\"\n   }'")
 			}
 		}
 	}
@@ -75,7 +75,7 @@ func BuildJoinRoomPayload(chatJoinRoomMessage string, chatJoinRoomToken string) 
 		if chatJoinRoomMessage != "" {
 			err = json.Unmarshal([]byte(chatJoinRoomMessage), &message)
 			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"invite_key\": \"Placeat enim.\"\n   }'")
+				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"invite_key\": \"Enim voluptas.\"\n   }'")
 			}
 		}
 	}
@@ -100,7 +100,7 @@ func BuildInviteRoomPayload(chatInviteRoomMessage string, chatInviteRoomToken st
 		if chatInviteRoomMessage != "" {
 			err = json.Unmarshal([]byte(chatInviteRoomMessage), &message)
 			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"room_id\": \"Culpa eveniet rerum nam suscipit reiciendis sed.\",\n      \"user_id\": \"Labore culpa.\"\n   }'")
+				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"room_id\": \"Sed ipsam.\",\n      \"user_id\": \"Culpa laudantium qui esse non dolorem et.\"\n   }'")
 			}
 		}
 	}

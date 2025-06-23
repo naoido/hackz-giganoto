@@ -3,18 +3,19 @@ package bffapi
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
-	chatpb "object-t.com/hackz-giganoto/microservices/chat/gen/grpc/chat/pb"
-	"object-t.com/hackz-giganoto/microservices/profile/gen/profile"
-	security2 "object-t.com/hackz-giganoto/pkg/security"
-	"object-t.com/hackz-giganoto/pkg/telemetry"
 	"os"
 
 	"goa.design/clue/log"
 	"goa.design/goa/v3/security"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
+
 	bff "object-t.com/hackz-giganoto/microservices/bff/gen/bff"
+	chatpb "object-t.com/hackz-giganoto/microservices/chat/gen/grpc/chat/pb"
+	profilepb "object-t.com/hackz-giganoto/microservices/profile/gen/grpc/profile/pb"
+	security2 "object-t.com/hackz-giganoto/pkg/security"
+	"object-t.com/hackz-giganoto/pkg/telemetry"
 )
 
 type ServiceConfig struct {
@@ -23,15 +24,18 @@ type ServiceConfig struct {
 }
 
 type bffsrvc struct {
-	chatGrpcClient chatpb.ChatClient
+	chatGRPCClient    chatpb.ChatClient
+	profileGRPCClient profilepb.ProfileClient
 }
 
 // NewBff returns the bff service implementation.
 func NewBff() bff.Service {
 	config := ServiceConfig{
-		ChatServiceAddr: getEnvOrDefault("CHAT_SERVICE_ADDR", "localhost:50053"),
+		ChatServiceAddr:    getEnvOrDefault("CHAT_SERVICE_ADDR", "localhost:50053"),
+		ProfileServiceAddr: getEnvOrDefault("PROFILE_SERVICE_ADDR", "localhost:50052"),
 	}
 
+	// Chat service client setup
 	chatConn, err := grpc.NewClient(
 		config.ChatServiceAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -42,8 +46,19 @@ func NewBff() bff.Service {
 	}
 	chatGRPCClient := chatpb.NewChatClient(chatConn)
 
+	profileConn, err := grpc.NewClient(
+		config.ProfileServiceAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		telemetry.GRPCClientInterceptor(),
+	)
+	if err != nil {
+		panic(fmt.Sprintf("failed to connect to profile service: %v", err))
+	}
+	profileGRPCClient := profilepb.NewProfileClient(profileConn)
+
 	return &bffsrvc{
-		chatGrpcClient: chatGRPCClient,
+		chatGRPCClient:    chatGRPCClient,
+		profileGRPCClient: profileGRPCClient,
 	}
 }
 
@@ -68,65 +83,113 @@ func (s *bffsrvc) JWTAuth(ctx context.Context, token string, scheme *security.JW
 	claims, err := security2.ValidToken(token)
 	if err != nil {
 		log.Printf(ctx, "invalid token: %v", err)
-		return ctx, profile.InvalidToken("invalid token")
+		return ctx, bff.InvalidArgument("invalid token")
 	}
 	return security2.HasPermission(ctx, claims, scheme)
 }
 
-// Create a new chat room
+// CreateRoom creates a new chat room
 func (s *bffsrvc) CreateRoom(ctx context.Context, p *bff.CreateRoomPayload) (res string, err error) {
 	log.Printf(ctx, "bff.create_room")
-	return s.CreateRoom(ctx, &bff.CreateRoomPayload{})
+	grpcCtx := s.addJWTToContext(ctx)
+
+	room, err := s.chatGRPCClient.CreateRoom(grpcCtx, &chatpb.CreateRoomRequest{})
+	if err != nil {
+		log.Printf(ctx, "failed to create room: %v", err)
+		return "", err
+	}
+	if room == nil {
+		return "", fmt.Errorf("received nil response from chat service")
+	}
+
+	return room.Field, nil
 }
 
-// Get chat room history with enriched user names
+// History gets chat room history with enriched user names
 func (s *bffsrvc) History(ctx context.Context, p *bff.HistoryPayload) (res []*bff.EnrichedMessage, err error) {
 	log.Printf(ctx, "bff.history")
-	history, err := s.chatGrpcClient.History(ctx, &chatpb.HistoryRequest{})
+	grpcCtx := s.addJWTToContext(ctx)
+	resp, err := s.chatGRPCClient.History(grpcCtx, &chatpb.HistoryRequest{
+		RoomId: p.RoomID,
+	})
 	if err != nil {
 		return nil, err
 	}
 
+	if resp == nil {
+		return nil, fmt.Errorf("received nil response from chat service")
+	}
+
 	res = []*bff.EnrichedMessage{}
-	for _, h := range history.Field {
+	for _, h := range resp.Field {
 		res = append(res, &bff.EnrichedMessage{
 			MessageID: &h.Id,
+			RoomID:    h.RoomId,
 			Message:   h.Message_,
 			UserID:    h.UserId,
-			CreatedAt: &h.CreatedAt,
 			UpdatedAt: &h.UpdatedAt,
+			CreatedAt: &h.CreatedAt,
 		})
 	}
 
 	return
 }
 
-// Get all chat rooms history
+// RoomList gets all chat rooms
 func (s *bffsrvc) RoomList(ctx context.Context, p *bff.RoomListPayload) (res []string, err error) {
 	log.Printf(ctx, "bff.room-list")
-	list, err := s.chatGrpcClient.RoomList(ctx, &chatpb.RoomListRequest{})
+	grpcCtx := s.addJWTToContext(ctx)
+	resp, err := s.chatGRPCClient.RoomList(grpcCtx, &chatpb.RoomListRequest{})
 	if err != nil {
-		return nil, err
+		return nil, bff.InternalError("InternalError")
 	}
 
-	return list.Field, nil
+	if resp == nil {
+		return nil, fmt.Errorf("received nil response from chat service")
+	}
+
+	res = resp.Field
+
+	return
 }
 
-// Creates a new chat room
+// JoinRoom joins a chat room
 func (s *bffsrvc) JoinRoom(ctx context.Context, p *bff.JoinRoomPayload) (res string, err error) {
 	log.Printf(ctx, "bff.join-room")
-	return s.JoinRoom(ctx, p)
+	grpcCtx := s.addJWTToContext(ctx)
+
+	resp, err := s.chatGRPCClient.JoinRoom(grpcCtx, &chatpb.JoinRoomRequest{
+		InviteKey: p.InviteKey,
+	})
+	if err != nil {
+		return "", bff.InternalError("InternalError")
+	}
+
+	if resp == nil {
+		return "", fmt.Errorf("received nil response from chat service")
+	}
+
+	return resp.Field, nil
 }
 
-// Creates a new chat room
+// InviteRoom invites a user to a chat room
 func (s *bffsrvc) InviteRoom(ctx context.Context, p *bff.InviteRoomPayload) (res string, err error) {
 	log.Printf(ctx, "bff.invite-room")
-	invRes, err := s.chatGrpcClient.InviteRoom(ctx, &chatpb.InviteRoomRequest{
+	grpcCtx := s.addJWTToContext(ctx)
+	resp, err := s.chatGRPCClient.InviteRoom(grpcCtx, &chatpb.InviteRoomRequest{
 		RoomId: p.RoomID,
 		UserId: p.UserID,
 	})
 
-	return invRes.String(), err
+	if err != nil {
+		return "", bff.InternalError("InternalError")
+	}
+
+	if resp == nil {
+		return "", fmt.Errorf("received nil response from chat service")
+	}
+
+	return resp.Field, nil
 }
 
 func (s *bffsrvc) StreamChat(ctx context.Context, p *bff.StreamChatPayload, stream bff.StreamChatServerStream) (err error) {
@@ -144,7 +207,7 @@ func (s *bffsrvc) StreamChat(ctx context.Context, p *bff.StreamChatPayload, stre
 	)
 	grpcCtx = metadata.NewOutgoingContext(grpcCtx, md)
 
-	chatStream, err := s.chatGrpcClient.StreamRoom(grpcCtx)
+	chatStream, err := s.chatGRPCClient.StreamRoom(grpcCtx)
 	if err != nil {
 		log.Print(ctx, log.KV{"bff.stream_chat", "ERROR: failed to connect to chat service"}, log.KV{"error", err.Error()})
 		return bff.InternalError("failed to connect to chat service")
@@ -172,11 +235,11 @@ func (s *bffsrvc) StreamChat(ctx context.Context, p *bff.StreamChatPayload, stre
 				return
 			}
 
-			chatReq := &chatpb.StreamRoomStreamingRequest{
+			c := &chatpb.StreamRoomStreamingRequest{
 				Field: msg,
 			}
 
-			if err := chatStream.Send(chatReq); err != nil {
+			if err := chatStream.Send(c); err != nil {
 				log.Print(ctx, log.KV{"bff.stream_chat", "ERROR: chat send error"}, log.KV{"error", err.Error()})
 				errCh <- err
 				return
@@ -195,11 +258,9 @@ func (s *bffsrvc) StreamChat(ctx context.Context, p *bff.StreamChatPayload, stre
 				return
 			}
 
-			userId := chatMsg.UserId
-
 			enrichedMsg := &bff.EnrichedMessage{
 				RoomID:  p.RoomID,
-				UserID:  userId,
+				UserID:  chatMsg.UserId,
 				Message: chatMsg.Message_,
 			}
 
@@ -227,16 +288,44 @@ func (s *bffsrvc) StreamChat(ctx context.Context, p *bff.StreamChatPayload, stre
 	return stream.Close()
 }
 
-// Get current user profile
+// GetProfile gets current user profile
 func (s *bffsrvc) GetProfile(ctx context.Context, p *bff.GetProfilePayload) (res *bff.GetProfileResult, err error) {
-	res = &bff.GetProfileResult{}
 	log.Printf(ctx, "bff.get_profile")
-	return
+	grpcCtx := s.addJWTToContext(ctx)
+	resp, err := s.profileGRPCClient.GetProfile(grpcCtx, &profilepb.GetProfileRequest{
+		UserId: p.UserID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if resp == nil {
+		return nil, fmt.Errorf("received nil response from profile service")
+	}
+
+	return &bff.GetProfileResult{
+		UserID: resp.UserId,
+		Name:   resp.Name,
+	}, nil
 }
 
-// Update current user profile
+// UpdateProfile updates current user profile
 func (s *bffsrvc) UpdateProfile(ctx context.Context, p *bff.UpdateProfilePayload) (res *bff.UpdateProfileResult, err error) {
-	res = &bff.UpdateProfileResult{}
 	log.Printf(ctx, "bff.update_profile")
-	return
+	grpcCtx := s.addJWTToContext(ctx)
+	resp, err := s.profileGRPCClient.UpdateProfile(grpcCtx, &profilepb.UpdateProfileRequest{
+		Name: p.Name,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if resp == nil {
+		return nil, fmt.Errorf("received nil response from profile service")
+	}
+
+	return &bff.UpdateProfileResult{
+		UserID: resp.UserId,
+		Name:   resp.Name,
+	}, nil
 }

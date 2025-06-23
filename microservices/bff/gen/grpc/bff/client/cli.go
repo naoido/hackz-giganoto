@@ -37,7 +37,7 @@ func BuildHistoryPayload(bffHistoryMessage string, bffHistoryToken string) (*bff
 		if bffHistoryMessage != "" {
 			err = json.Unmarshal([]byte(bffHistoryMessage), &message)
 			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"room_id\": \"Est sunt.\"\n   }'")
+				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"room_id\": \"Pariatur non commodi sunt quibusdam.\"\n   }'")
 			}
 		}
 	}
@@ -75,7 +75,7 @@ func BuildJoinRoomPayload(bffJoinRoomMessage string, bffJoinRoomToken string) (*
 		if bffJoinRoomMessage != "" {
 			err = json.Unmarshal([]byte(bffJoinRoomMessage), &message)
 			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"invite_key\": \"Sed dolorem.\"\n   }'")
+				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"invite_key\": \"Et quae consequatur expedita.\"\n   }'")
 			}
 		}
 	}
@@ -100,7 +100,7 @@ func BuildInviteRoomPayload(bffInviteRoomMessage string, bffInviteRoomToken stri
 		if bffInviteRoomMessage != "" {
 			err = json.Unmarshal([]byte(bffInviteRoomMessage), &message)
 			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"room_id\": \"Quo facilis quas voluptatum.\",\n      \"user_id\": \"Omnis voluptatum expedita.\"\n   }'")
+				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"room_id\": \"Veritatis error et nulla eius.\",\n      \"user_id\": \"Sed dolorem.\"\n   }'")
 			}
 		}
 	}
@@ -137,14 +137,24 @@ func BuildStreamChatPayload(bffStreamChatToken string, bffStreamChatRoomID strin
 
 // BuildGetProfilePayload builds the payload for the bff get_profile endpoint
 // from CLI flags.
-func BuildGetProfilePayload(bffGetProfileToken string) (*bff.GetProfilePayload, error) {
-	var token *string
+func BuildGetProfilePayload(bffGetProfileMessage string, bffGetProfileToken string) (*bff.GetProfilePayload, error) {
+	var err error
+	var message bffpb.GetProfileRequest
 	{
-		if bffGetProfileToken != "" {
-			token = &bffGetProfileToken
+		if bffGetProfileMessage != "" {
+			err = json.Unmarshal([]byte(bffGetProfileMessage), &message)
+			if err != nil {
+				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"user_id\": \"Alias vel.\"\n   }'")
+			}
 		}
 	}
-	v := &bff.GetProfilePayload{}
+	var token string
+	{
+		token = bffGetProfileToken
+	}
+	v := &bff.GetProfilePayload{
+		UserID: message.UserId,
+	}
 	v.Token = token
 
 	return v, nil
@@ -159,7 +169,7 @@ func BuildUpdateProfilePayload(bffUpdateProfileMessage string, bffUpdateProfileT
 		if bffUpdateProfileMessage != "" {
 			err = json.Unmarshal([]byte(bffUpdateProfileMessage), &message)
 			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"name\": \"Labore ipsum ut dolor atque impedit quis.\"\n   }'")
+				return nil, fmt.Errorf("invalid JSON for message, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"name\": \"Rem non sequi rerum dicta autem.\"\n   }'")
 			}
 		}
 	}
